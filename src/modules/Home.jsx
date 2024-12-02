@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { rooturl } from "../components/assets";
 
 export const Home = ({posts})=>{
 	const navigate = useNavigate();
@@ -20,7 +21,7 @@ export const Home = ({posts})=>{
 						<div className="post-content">
 							{post.post_content.length && post.post_content.map((img,index)=>{
 								return(
-									<img src={'http://192.168.1.11:8000'+img} key={index} alt=""></img>
+									<img src={rooturl+img} key={index} alt=""></img>
 								)
 							})
 							}

@@ -1,30 +1,33 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Footer } from "./Base";
 import { AppContext } from "../Context";
 import {Search} from "./Search";
 import {Home} from "./Home";
 import {Profile} from "./Profile";
-import { Contact } from "./Contact";
+import { Login } from "./Login";
+import { useSelector } from "react-redux";
 
 
 const Index = ({posts})=>{
 	const {page,setPage} = useContext(AppContext);
-
+	const user = useSelector(state=>state.user.user);
+	const [searchResult,setSearchResult] = useState([]);
 	const [search,setSearch] = useState('');
+
+	useEffect(()=>{
+		console.log('index: ',searchResult);
+	},[searchResult]);
 	
 	return(
-	<section id={window.innerWidth>950?"main-content":""}>
+	<>
 		{
 			(page==='Home' && <Home posts={posts}/>)||
-			(page==='Search' && <Search props={{search,setSearch}} />)||
-			(page==='Profile' && <Profile/>)
+			(page==='Search' && <Search props={{search,setSearch,searchResult,setSearchResult}}  />)||
+			(page==='Profile' && (user?<Profile/>:<Login/>))
 		}
 
-		{window.innerWidth>950?
-			<Contact />:
-		null}
 		<Footer/>
-	</section>
+	</>
 	);
 }
 export default Index;

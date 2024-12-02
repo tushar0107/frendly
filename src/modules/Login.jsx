@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
-import { login } from "../global/UserSlice";
+import { login, profilePosts } from "../global/UserSlice";
 import axios from "axios";
+import { apiurl } from "../components/assets";
 
 
 export const Login = ()=>{
@@ -13,10 +14,12 @@ export const Login = ()=>{
 
 	const loginHandle = (action)=>{
 		const data = {username:username,password:password};
-		axios.post(`http://192.168.1.11:8000/api/v1/${action}`,data).then((res)=>{
+		axios.post(apiurl+action,data).then((res)=>{
 			if(res.data.status){
 				localStorage.setItem('userdata',JSON.stringify(res.data.data));
+				localStorage.setItem('posts',JSON.stringify(res.data.posts));
 				dispatch(login(res.data.data));
+				dispatch(profilePosts(res.data.posts));
 			}
 		}).catch(e=>{
 			console.log('login error: ',e.message);

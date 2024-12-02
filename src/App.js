@@ -7,8 +7,9 @@ import { AppContext } from "./Context";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "./global/UserSlice";
+import { login, profilePosts } from "./global/UserSlice";
 import { Profile } from "./modules/Profile";
+import { apiurl } from "./components/assets";
 
 function App() {
 	const user = useSelector((state) => state.user.user);
@@ -20,10 +21,16 @@ function App() {
 	useEffect(()=>{
 		if(!user){
 			var userdata = localStorage.getItem('userdata');
-			dispatch(login(JSON.parse(userdata)));
+			var posts = localStorage.getItem('posts');
+			if(userdata){
+				dispatch(login(JSON.parse(userdata)));
+			}
+			if(posts){
+				dispatch(profilePosts(JSON.parse(posts)));
+			}
 		}
 		//fetch posts
-		axios.get("http://192.168.1.11:8000/api/v1/get-posts").then((res)=>{
+		axios.get(apiurl+'get-posts').then((res)=>{
 			if(res.data.status){
 				setPosts(res.data.data);
 			}else{
