@@ -6,8 +6,8 @@ import { apiurl } from "../components/assets";
 
 
 export const Login = ()=>{
-	const [username,setUserName] = useState('tushar07');
-	const [password,setPassword] = useState('123456');
+	const [username,setUserName] = useState('');
+	const [password,setPassword] = useState('');
 	const [passShow,setPassShow] = useState(false);
 	const input = useRef();
 	const dispatch = useDispatch();
@@ -18,7 +18,7 @@ export const Login = ()=>{
 			if(res.data.status){
 				localStorage.setItem('userdata',JSON.stringify(res.data.data));
 				localStorage.setItem('posts',JSON.stringify(res.data.posts));
-				dispatch(login(res.data.data));
+				dispatch(login({'user':res.data.data,'token':res.data.token}));
 				dispatch(profilePosts(res.data.posts));
 			}
 		}).catch(e=>{

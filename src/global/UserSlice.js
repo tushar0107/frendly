@@ -3,14 +3,17 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
 	user:null,
-	posts:[]
+	posts:[],
+	token:null
 }
 const userSlice = createSlice({
 	name:'user',
 	initialState,
 	reducers:{
 		login(state,action){
-			state.user = action.payload;
+			console.log(action.payload);
+			state.user = action.payload.user;
+			state.token = action.payload.token;
 		},
 		profilePosts(state,action){
 			state.posts = action.payload;

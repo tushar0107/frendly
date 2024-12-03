@@ -47,9 +47,9 @@ const Header = ()=>{
 				{/* <img src="/images/logo.png" alt="" /> */}
 				<span>{appName}</span>
 			</div>
-			<Link to={'/contact'}>
+			{user?<Link to={'/contact'}>
 				<img src="/assets/live-chat.png" alt="" />
-			</Link>
+			</Link>:null}
 			{/* <div id="menu-btn" onClick={()=>{}}>
 				<div className="btn-line" style={{width:'80%'}}></div>
 				<div className="btn-line" style={{width:'60%'}}></div>

@@ -26,8 +26,14 @@ img{
   object-position: center;
   display: block;
 }
-img.small-icon{
+img.tiny-icon{
+  width: 20px;
+}
+img.x-small-icon{
   width: 25px;
+}
+img.small-icon{
+  width: 50px;
 }
 img.medium-icon{
   width: 70px;
@@ -104,7 +110,7 @@ footer .footer-icon{
 
 #login-modal{
   position: fixed;
-  z-index: 9999;
+  z-index: 99;
   inset: 0 0 0 0;
   background-color: #00000029;
   display: flex;
@@ -186,6 +192,7 @@ footer .footer-icon{
   display: flex;
   align-items: flex-end;
   gap: 2rem;
+  position: relative;
 }
 #profile-photo {
   width: min(30%, 100px);
@@ -194,6 +201,11 @@ footer .footer-icon{
   left: 1rem;
   border-radius: 100%;
   overflow: hidden;
+}
+#profile-banner #logout-btn{
+  position: absolute;
+  background-color: transparent;
+  inset: 5px 5px auto auto;
 }
 #profile-posts,#searched-posts{
   display: grid;
@@ -361,16 +373,15 @@ footer .footer-icon{
 #searched-posts{
   margin-top: 1rem;
 }
-#search-accounts *{
-  /* border: 1px solid red; */
-}
-#search-accounts .profile{
+
+.accounts .profile,
+.accounts .profile{
   display: flex;
   gap: 1rem;
   padding: 1rem;
   border-bottom: 1px solid lightgray;
 }
-#search-accounts .profile .username{
+.accounts .profile .username{
   font-size: 14px;
   color: grey;
 }

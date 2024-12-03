@@ -1,16 +1,17 @@
 import axios from "axios";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { apiurl, rooturl } from "../components/assets";
 import { useNavigate } from "react-router-dom";
+import { AppContext } from "../Context";
 
-export const Search = ({props})=>{
-	const {search,setSearch,searchResult, setSearchResult} = props;
-	const [category,setCategory] = useState('Posts');
+export const Search = ()=>{
+	const {search,setSearch,searchResult, setSearchResult} = useContext(AppContext);
+	const [category,setCategory] = useState('');
 	const navigate = useNavigate();
 	
 	const searchHandle = ()=>{
 		const form = {
-			search:search,
+			search:[search],
 			category:category
 		}
 		axios.post(apiurl+'get-posts',form).then((res)=>{
@@ -26,13 +27,13 @@ export const Search = ({props})=>{
 		<section id="search-page">
 			<form>
 				<input type="text" id="search-bar" value={search} onChange={(e)=>setSearch(e.target.value)} placeholder="Search.."></input>
-				<button type="button"><img src="/assets/next.png" className="small-icon" onClick={()=>searchHandle()} alt="" /></button>
+				<button type="button"><img src="/assets/next.png" className="x-small-icon" onClick={()=>searchHandle()} alt="" /></button>
 			</form>
 			<div id="search-category">
-				<label><input type="checkbox" name="category" value={'Posts'} checked={category==='Posts'?true:false} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Posts</span></label>
-				<label><input type="checkbox" name="category" value={'Accounts'} checked={category==='Accounts'?true:false} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Accounts</span></label>
-				<label><input type="checkbox" name="category" value={'Videos'} checked={category==='Videos'?true:false} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Videos</span></label>
-				<label><input type="checkbox" name="category" value={'Tags'} checked={category==='Tags'?true:false} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Tags</span></label>
+				<label><input type="checkbox" name="category" value={'Posts'} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Posts</span></label>
+				<label><input type="checkbox" name="category" value={'Accounts'} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Accounts</span></label>
+				<label><input type="checkbox" name="category" value={'Videos'} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Videos</span></label>
+				<label><input type="checkbox" name="category" value={'Tags'} onChange={(e)=>(setCategory(e.target.value))} id="" /><span>Tags</span></label>
 			</div>
 			<div id="search-result">
 				{category==='Posts'?
@@ -53,7 +54,7 @@ export const Search = ({props})=>{
 				:
 				category==='Accounts'?
 					searchResult?.accounts && 
-					(<div id="search-accounts">
+					(<div className="accounts">
 						{searchResult.accounts.map((account,index)=>{
 							return(
 							<div className="profile" onClick={()=>navigate('/profile/'+account.username)} key={index}>

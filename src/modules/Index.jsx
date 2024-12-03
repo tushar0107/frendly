@@ -8,21 +8,15 @@ import { Login } from "./Login";
 import { useSelector } from "react-redux";
 
 
-const Index = ({posts})=>{
-	const {page,setPage} = useContext(AppContext);
+const Index = ()=>{
+	const {page} = useContext(AppContext);
 	const user = useSelector(state=>state.user.user);
-	const [searchResult,setSearchResult] = useState([]);
-	const [search,setSearch] = useState('');
-
-	useEffect(()=>{
-		console.log('index: ',searchResult);
-	},[searchResult]);
 	
 	return(
 	<>
 		{
-			(page==='Home' && <Home posts={posts}/>)||
-			(page==='Search' && <Search props={{search,setSearch,searchResult,setSearchResult}}  />)||
+			(page==='Home' && <Home/>)||
+			(page==='Search' && <Search/>)||
 			(page==='Profile' && (user?<Profile/>:<Login/>))
 		}
 

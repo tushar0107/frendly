@@ -1,7 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { rooturl } from "../components/assets";
+import { useContext } from "react";
+import { AppContext } from "../Context";
 
-export const Home = ({posts})=>{
+export const Home = ()=>{
+	const {posts} = useContext(AppContext);
 	const navigate = useNavigate();
 
 	if(posts?.length){

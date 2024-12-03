@@ -1,12 +1,14 @@
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { Login } from "./Login";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { apiurl, rooturl } from "../components/assets";
+import { logout } from "../global/UserSlice";
 
 export const Profile = ()=>{
 	const {username} = useParams();
+	const dispatch = useDispatch();
 	//fetch user data from redux store
 	var myProfile = useSelector(state=>state.user.user);
 	var myPosts = useSelector(state=>state.user.posts);
@@ -43,6 +45,7 @@ export const Profile = ()=>{
 							<img src="/assets/user.png" alt="" />
 						</div>
 						<span>{profile?.username}</span>
+						<button id="logout-btn" onClick={()=>{dispatch(logout())}}><img src="/assets/logout.png" alt="" className="tiny-icon" /></button>
 					</div>
 					{postsLoading?
 					<div id="posts-loading">
@@ -51,7 +54,7 @@ export const Profile = ()=>{
 					:
 					<div id="posts-segment">
 					{ posts?.length && 
-						<div id="profile-posts" className="segment-block">
+						(<div id="profile-posts" className="segment-block">
 						{
 							posts.map((post,index)=>{
 								return(
@@ -63,7 +66,7 @@ export const Profile = ()=>{
 								)
 							})
 						}
-						</div>
+						</div>)
 						|| (<p>Nothing to show</p>)
 					}
 					</div>
