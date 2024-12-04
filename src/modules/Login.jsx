@@ -18,6 +18,7 @@ export const Login = ()=>{
 			if(res.data.status){
 				localStorage.setItem('userdata',JSON.stringify(res.data.data));
 				localStorage.setItem('posts',JSON.stringify(res.data.posts));
+				localStorage.setItem('token',JSON.stringify(res.data.token));
 				dispatch(login({'user':res.data.data,'token':res.data.token}));
 				dispatch(profilePosts(res.data.posts));
 			}

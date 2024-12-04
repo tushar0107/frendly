@@ -12,46 +12,49 @@ import { Profile } from "./modules/Profile";
 import { apiurl } from "./components/assets";
 
 function App() {
-	const user = useSelector((state) => state.user.user);
+	const {user} = useSelector((state) => state.user);
 	const dispatch = useDispatch();
 	const [page, setPage] = useState("Home");
 	const [contacts, setContacts] = useState([]);
-	const [posts,setPosts] = useState([]);
+	const [feedPosts,setFeedPosts] = useState([]);
 	const [searchResult,setSearchResult] = useState([]);
-	const [search,setSearch] = useState('');
+	const [search,setSearch] = useState({search:'',category:''});
 
 
 	useEffect(()=>{
 		if(!user){
 			var userdataLocal = localStorage.getItem('userdata');
-			var posts = localStorage.getItem('posts');
+			var postsLocal = localStorage.getItem('posts');
+			var token = localStorage.getItem('token');
 			var userdata = JSON.parse(userdataLocal);
 			if(userdata){
-				dispatch(login(userdata));
+				dispatch(login({'user':userdata,'token':token}));
 			}
-			if(posts){
-				dispatch(profilePosts(JSON.parse(posts)));
+			if(postsLocal){
+				dispatch(profilePosts(JSON.parse(postsLocal)));
 			}
 		}
 		
-	}, []);
+	});
 
 	useEffect(()=>{
 		if(user?.preferences){
 			//fetch posts for feed based on the preferences
 			axios.post(apiurl+'get-posts',{'search':user?.preferences}).then((res)=>{
 				if(res.data.status){
-					setPosts(res.data.data.posts);
+					setFeedPosts(res.data.data.posts);
 				}else{
-					setPosts(res.data.message);
+					setFeedPosts([]);
 				}
 			}).catch(e=>console.log('Error fetching posts: ',e.message));
 		}
 
+		const localcontacts = localStorage.getItem('contacts');
 		// fetch contacts if not in the localstorage
-		if(!contacts?.length){
+		if(!localcontacts?.length){
 			axios.post(apiurl+'get-contacts',{username:user?.username}).then((res)=>{
 				if(res.data.status){
+					localStorage.setItem('contacts',JSON.stringify(res.data.data));
 					setContacts(res.data.data);
 				}else{
 					setContacts(res.data.message);
@@ -59,13 +62,13 @@ function App() {
 			}).catch(e=>console.log('Error fetching posts: ',e.message));
 		}
 		
-	},[user]);
+	},[user,contacts?.length]);
 	
 
 	return (
 		<>
 			<Header />
-			<AppContext.Provider value={{posts,page,setPage,search,setSearch,searchResult,setSearchResult,contacts,setContacts }}>
+			<AppContext.Provider value={{feedPosts,page,setPage,search,setSearch,searchResult,setSearchResult,contacts,setContacts }}>
 				<Routes>
 					<Route path="/" element={<Index/>} />
 					<Route path="/index" element={<Index/>} />

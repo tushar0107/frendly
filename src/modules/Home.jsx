@@ -4,14 +4,14 @@ import { useContext } from "react";
 import { AppContext } from "../Context";
 
 export const Home = ()=>{
-	const {posts} = useContext(AppContext);
+	const {feedPosts} = useContext(AppContext);
 	const navigate = useNavigate();
 
-	if(posts?.length){
+	if(feedPosts?.length){
 	return(
 		<div id="post-container">
 			{
-				posts.length && posts.map((post,index)=>{
+				feedPosts.length && feedPosts.map((post,index)=>{
 					return(
 					<div className="post-block" key={index}>
 						<div className="post-head">
@@ -24,7 +24,7 @@ export const Home = ()=>{
 						<div className="post-content">
 							{post.post_content.length && post.post_content.map((img,index)=>{
 								return(
-									<img src={rooturl+img} key={index} alt=""></img>
+									<img src={`${rooturl}${img}`} key={index} alt=""></img>
 								)
 							})
 							}

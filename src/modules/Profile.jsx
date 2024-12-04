@@ -34,7 +34,7 @@ export const Profile = ()=>{
 			}).catch(e=>console.log('Error fetching user details: ',e.message));
 		}
 
-	},[]);
+	},[username]);
 
 	if(myProfile){
 		return(
@@ -44,8 +44,8 @@ export const Profile = ()=>{
 						<div id="profile-photo">
 							<img src="/assets/user.png" alt="" />
 						</div>
-						<span>{profile?.username}</span>
-						<button id="logout-btn" onClick={()=>{dispatch(logout())}}><img src="/assets/logout.png" alt="" className="tiny-icon" /></button>
+						<span className="profile-username">{profile?.username}</span>
+						{!username?<button id="logout-btn" onClick={()=>{dispatch(logout())}}><img src="/assets/logout.png" alt="" className="tiny-icon" /></button>:null}
 					</div>
 					{postsLoading?
 					<div id="posts-loading">
@@ -53,21 +53,20 @@ export const Profile = ()=>{
 					</div>
 					:
 					<div id="posts-segment">
-					{ posts?.length && 
-						(<div id="profile-posts" className="segment-block">
+					{ posts?.length ? 
+						<div id="profile-posts" className="segment-block">
 						{
 							posts.map((post,index)=>{
 								return(
 									<div className="post" key={index}>
-										<img src={rooturl+post.post_content[0]} alt="" />
+										<img src={`${rooturl}${post.post_content[0]}`} alt="" />
 										<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
 										<span className="likes"><img src="/assets/tiny-heart.png" className="tiny-img" alt="" />{post.likes}</span>
 									</div>
 								)
 							})
 						}
-						</div>)
-						|| (<p>Nothing to show</p>)
+						</div> :null
 					}
 					</div>
 					}

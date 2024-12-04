@@ -67,10 +67,10 @@ const Footer = ()=>{
 	})};
 	return(
 		<footer>
-			<div onClick={()=>{setTransition(()=>{setPage('Home');})}}><img className="footer-icon" src="/assets/house.png" alt=""></img></div>
-			<div onClick={()=>{changePage('Search')}}><img className="footer-icon" src="/assets/add-post.png" alt=""></img></div>
-			<div onClick={()=>{changePage('Search')}}><img className="footer-icon" src="/assets/search.png" alt=""></img></div>
-			<div onClick={()=>{changePage('Profile')}}><img className="footer-icon" src="/assets/user.png" alt=""></img></div>
+			<div onClick={()=>{changePage('Home')}} className={page==='Home'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/house.png" alt=""></img></div>
+			<div onClick={()=>{changePage('Search')}} className={page==='Search'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/add-post.png" alt=""></img></div>
+			<div onClick={()=>{changePage('Search')}} className={page==='Search'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/search.png" alt=""></img></div>
+			<div onClick={()=>{changePage('Profile')}} className={page==='Profile'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/user.png" alt=""></img></div>
 		</footer>
 	);
 }

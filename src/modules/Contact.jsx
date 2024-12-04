@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 
 export const Contact = ({contacts})=>{
 	const navigate = useNavigate();
-	console.log(contacts);
 	return(
 		<section id="contact-page">
 			<div className="accounts">
