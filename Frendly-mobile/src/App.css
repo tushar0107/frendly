@@ -1,0 +1,409 @@
+
+:root{
+  --primaryTextDark: #242424;
+  --primaryBgColor: #eee;
+}
+
+body{
+  color: var(--primaryTextDark);
+  background-color: #f5f5f5;
+  /* font-family: "Sriracha", cursive; */
+  font-family: system-ui;
+}
+button{
+  display: block;
+  padding: 10px 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: inherit;
+  outline: none;
+  border: none;
+}
+img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+img.tiny-icon{
+  width: 20px;
+}
+img.x-small-icon{
+  width: 25px;
+}
+img.small-icon{
+  width: 50px;
+}
+img.medium-icon{
+  width: 70px;
+}
+h1,h2,h3,h4,h5,h6{
+  text-align: center;
+}
+#menu-btn {
+  display: flex;
+  width: 30px;
+  height: 30px;
+  justify-content: center;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0.8rem 0;
+  cursor: pointer;
+}
+#menu-btn .btn-line{
+  width: 80%;
+  height: 3px;
+  border-radius: 10px;
+  background-color: #242424;
+}
+header{
+  position: sticky;
+  z-index: 100000;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem;
+  background-color: #ffffff;
+}
+header #logo img{
+  width: 40px;
+  padding: .5rem;
+}
+header #logo span{
+  font-size: 1.4rem;
+  padding: 0.2rem 0rem;
+  display: inline-block;
+  font-family: "Sriracha", cursive;
+}
+header img {
+  width: 35px;
+  margin: 5px;
+}
+footer{
+  position: sticky;
+  z-index: 100000;
+  bottom: 0;
+  display: flex;
+    justify-content: space-around;
+    position: fixed;
+    inset: auto 0 0 0;
+    height: 50px;
+    align-items: center;
+    background-color: #ffffff;
+}
+section{
+  padding: 1rem 0;
+}
+section#main-content{
+  width: min(1100px, 100%);
+  margin: 0 auto;
+  display: flex;
+  padding: 1rem 0;
+  gap: 1rem;
+}
+footer .tab {
+  width: 25%;
+}
+footer .footer-icon{
+  width: 25px;
+  margin: 0 auto;
+  padding: 12px;
+}
+footer .tab-active.tab {
+  border-top: 2px solid black;
+}
+#login-modal{
+  position: fixed;
+  z-index: 99;
+  inset: 0 0 0 0;
+  background-color: #00000029;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#login-container{
+  width: min(500px,85%);
+  border-radius: 10px;
+  padding: 1rem;
+  background-color: var(--primaryBgColor);
+}
+#login-container label{
+  display: block;
+  position: relative;
+  padding: 0.5rem 0.8rem;
+  margin: 2rem auto;
+  font-size: 1rem;
+  border-bottom: 2px solid grey;
+}
+#login-container label > span{
+  position: absolute;
+  left: .5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: .3s ease;
+  color: rgb(173, 173, 173);
+  pointer-events: none;
+  line-height: 1;
+}
+#login-container label input:focus ~ span {
+  top: 0;
+  left: .3rem;
+  font-size: 0.8rem;
+}
+#login-container input{
+  width: 100%;
+  font-size: 1rem;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  background-color: transparent;
+}
+
+#login-container input:focus + span{
+  top: 0px;
+  font-size: 16px;
+  color: #525252;
+  font-weight: bold;
+}
+
+#login-container .submit {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.pass-show-hide{
+  width: 20px;
+  object-fit: contain;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 1rem;
+}
+.submit-btn{
+
+}
+#profile-container {
+  width: min(500px, 96%);
+  margin: 0 auto;
+  border-radius: 1rem;
+}
+#profile-banner {
+  background-color: bisque;
+  border-radius: 1rem;
+  display: flex;
+  align-items: flex-end;
+  gap: 2rem;
+  position: relative;
+}
+#profile-photo {
+  width: min(30%, 100px);
+  position: relative;
+  top: 30px;
+  left: 1rem;
+  border-radius: 100%;
+  overflow: hidden;
+}
+#profile-banner #logout-btn{
+  position: absolute;
+  background-color: transparent;
+  inset: 5px 5px auto auto;
+}
+#profile-banner .profile-username{
+  font-family: "Sriracha", cursive;
+}
+#profile-posts,#searched-posts{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 0 auto;
+  margin-top: 50px;
+}
+#profile-posts .post,
+#searched-posts .post{
+  aspect-ratio: 1;
+  position: relative;
+}
+#profile-posts .post span,
+#searched-posts .post span{
+  position: absolute;
+  z-index: 100;
+  inset: auto auto 0 5px;
+  font-size: 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#profile-posts .post .tiny-img,
+#searched-posts .post .tiny-img{
+  display: inline;
+  width: 12px;
+}
+#profile-posts .post span.num-posts,
+#searched-posts .post span.num-posts{
+  inset: 5px 5px auto auto;
+}
+
+
+#contact-page{
+  position: sticky;
+  flex: 0 1 400px;
+  z-index: 1000;
+  top: 61px;
+  height: fit-content;
+  padding: 0;
+}
+
+.contact-item{
+  display: block;
+  padding: .8rem 1rem;
+  font-size: 18px;
+  transition: .3s ease;
+  color: inherit;
+  text-decoration: none;
+}
+.contact-item:hover {
+  background-color: #e8e8e8;
+}
+
+
+#post-container{
+  width: min(500px,100%);
+  margin: 0 auto;
+  margin-bottom: 50px;
+}
+.post-block{
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  background-color: #ffffff;
+}
+.post-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .4rem .2rem;
+  border-bottom: 1px solid #00000029;
+}
+.post-head span{
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.post-head img.post-more-btn {
+  width: 15px;
+}
+.post-head img {
+  width: 25px;
+  aspect-ratio: 1;
+  margin-right: 5px;
+}
+.post-content{
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.post-content img{
+  width: 100vw;
+  min-height: 200px;
+  scroll-snap-align: start;
+}
+.post-context{
+  padding: .5rem;
+}
+.post-actions{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .8rem;
+  padding: .5rem .5rem 0;
+}
+.post-action-like-comment{
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
+.post-actions img{
+  width: 25px;
+}
+.post-hashtags{
+  font-size: 12px;
+  color: #525252;
+}
+
+
+#search-page form{
+  display: flex;
+  background-color: #d6d6d6;
+  padding-left: 1rem;
+}
+#search-bar{
+  display: block;
+  width: calc(90%);
+  padding: .8rem .3rem;
+  margin: 0 auto;
+  border: none;
+  outline: none;
+  font-size: 16px;
+  background-color: transparent;
+}
+#search-page form button{
+  background-color: transparent;
+}
+#search-category{
+  padding: .5rem 1rem;
+  margin: 10px auto;
+  overflow-x: scroll;
+  scrollbar-width: none;
+  display: flex;
+  justify-content: flex-start;
+  gap: 1rem;
+  background-color: #f5f5f5;
+  position: relative;
+}
+#search-category span{
+  padding: 0.3rem .8rem;
+  border: 2px solid lightgrey;
+  border-radius: 50px;
+}
+#search-category label input{
+  position: absolute;
+  opacity: 0;
+}
+#search-category label input:checked ~ span{
+  border: 2px solid grey;
+  background-color: #dddddd;
+}
+
+#searched-posts{
+  margin-top: 1rem;
+}
+
+.accounts .profile,
+.accounts .profile{
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  border-bottom: 1px solid lightgray;
+}
+.accounts .profile .username{
+  font-size: 14px;
+  color: grey;
+}
+
+@media only screen and (max-width:941px){
+  #about-images{
+    position: static;
+    transform: none;
+  }
+}
+@media only screen and (max-width:658px){
+  #menu-btn{
+    display: flex;
+  }
+}
