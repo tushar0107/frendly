@@ -1,5 +1,5 @@
 import { useContext, useTransition } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {AppContext} from '../Context';
 import { useSelector } from "react-redux";
 const {name} = require('../../package.json');
@@ -14,29 +14,6 @@ export const Base = ()=>{
 	);
 }
 
-
-const NavLinks = ()=>{
-	return(
-		<>
-		<Link to={'/'} style={{borderBottom:window.location.pathname==='/'?'2px solid black':'none'}} onClick={()=>{}}>Home</Link>
-		<Link to={'/aboutus'} style={{borderBottom:window.location.pathname==='/aboutus'?'2px solid black':'none'}} onClick={()=>{}}>About</Link>
-		<Link style={{borderBottom:window.location.pathname==='/services'?'2px solid black':'none'}} onClick={()=>{}}>Services</Link>
-		<Link style={{borderBottom:window.location.pathname==='/contact'?'2px solid black':'none'}} onClick={()=>{}}>Contact</Link>
-		</>
-	);
-}
-
-const AuthLinks = ()=>{
-	const navigate = useNavigate();
-	return(
-		<>	
-			<div id="auth-actions">
-				<div onClick={()=>{navigate('/login');}}>Log In</div>
-				<div onClick={()=>{navigate('/signup');}} className="sign-up-btn">Sign Up</div>
-			</div>
-		</>
-	);
-}
 
 const Header = ()=>{
 	const user = useSelector(state=>state.user.user);
@@ -68,7 +45,7 @@ const Footer = ()=>{
 	return(
 		<footer>
 			<div onClick={()=>{changePage('Home')}} className={page==='Home'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/house.png" alt=""></img></div>
-			<div onClick={()=>{changePage('Search')}} className={page==='Search'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/add-post.png" alt=""></img></div>
+			<div onClick={()=>{changePage('NewPost')}} className={page==='NewPost'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/add-post.png" alt=""></img></div>
 			<div onClick={()=>{changePage('Search')}} className={page==='Search'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/search.png" alt=""></img></div>
 			<div onClick={()=>{changePage('Profile')}} className={page==='Profile'?'tab-active tab':'tab'}><img className="footer-icon" src="/assets/user.png" alt=""></img></div>
 		</footer>

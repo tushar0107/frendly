@@ -2,12 +2,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { Login } from "./Login";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { apiurl, rooturl } from "../components/assets";
 import { logout } from "../global/UserSlice";
+import { AppContext } from "../Context";
 
 export const Profile = ()=>{
 	const {username} = useParams();
+	const {setIsloading} = useContext(AppContext);
 	const dispatch = useDispatch();
 	//fetch user data from redux store
 	var myProfile = useSelector(state=>state.user.user);
@@ -19,7 +21,7 @@ export const Profile = ()=>{
 	//if other user's profile is to be opened set the user to the url parameter
 	useEffect(()=>{
 		if(username){
-			setPostsLoading(true);
+			setIsloading(true);
 			axios.get(apiurl+'get-user/'+username).then((res)=>{
 				if(res.data.status){
 					setProfile(res.data.data);
@@ -30,8 +32,11 @@ export const Profile = ()=>{
 					setProfile(null);
 					setPosts(null);
 				}
-				setPostsLoading(false);
-			}).catch(e=>console.log('Error fetching user details: ',e.message));
+				setIsloading(false);
+			}).catch(e=>{
+				console.log('Error fetching user details: ',e.message);
+				setIsloading(false);
+			});
 		}
 
 	},[username]);

@@ -6,20 +6,24 @@ import {Home} from "./Home";
 import {Profile} from "./Profile";
 import { Login } from "./Login";
 import { useSelector } from "react-redux";
+import { Loader } from "../components/Loader";
+import { NewPost } from "./NewPost";
 
 
 const Index = ()=>{
-	const {page} = useContext(AppContext);
+	const {page,isloading} = useContext(AppContext);
 	const user = useSelector(state=>state.user.user);
+
 	
 	return(
 	<>
 		{
 			(page==='Home' && <Home/>)||
 			(page==='Search' && <Search/>)||
+			(page==='NewPost' && <NewPost/>)||
 			(page==='Profile' && (user?<Profile/>:<Login/>))
 		}
-
+		{isloading?<Loader/>:null}
 		<Footer/>
 	</>
 	);

@@ -159,7 +159,7 @@ app.post('/api/v1/update-details',(req,res)=>{
 
 // to get posts on search based on search queries or for feeds based on user's preferences
 // search: 'any array of string', category: 'post' / 'account' / 'videos' / 'tags
-app.post('/api/v1/get-posts',(req,res)=>{
+app.post('/api/v1/search',(req,res)=>{
     const {search,category} = req.body;
     mongo.then(async(db)=>{
         var posts = [];
@@ -184,6 +184,25 @@ app.post('/api/v1/get-posts',(req,res)=>{
             });
         }
     }).catch(e=>console.log('Error fetching posts: ',e.message));
+});
+
+app.post('/api/v1/find-tags',(req,res)=>{
+    mongo.then(async(db)=>{
+        const result = await db.collection('users').find({username:req.body.search},{username:true}).toArray();
+        if(result){
+            res.status(200).json({
+                'status':true,
+                'users':result,
+                'message':'success'
+            });
+        }else{
+            res.status(200).json({
+                'status':false,
+                'data':null,
+                'message':'Unable to fetch users'
+            });
+        }
+    }).catch(e=>console.log('Error finding users: ',e.message));
 });
 
 // to fetch user deatils 

@@ -12,13 +12,14 @@ import { Profile } from "./modules/Profile";
 import { apiurl } from "./components/assets";
 
 function App() {
-	const {user} = useSelector((state) => state.user);
+	const {user,preferences} = useSelector((state) => state.user);
 	const dispatch = useDispatch();
 	const [page, setPage] = useState("Home");
 	const [contacts, setContacts] = useState([]);
 	const [feedPosts,setFeedPosts] = useState([]);
 	const [searchResult,setSearchResult] = useState([]);
 	const [search,setSearch] = useState({search:'',category:''});
+	const [isloading,setIsloading] = useState(false);
 
 
 	useEffect(()=>{
@@ -38,15 +39,20 @@ function App() {
 	});
 
 	useEffect(()=>{
-		if(user?.preferences){
+		if(preferences){
+			setIsloading(true);
 			//fetch posts for feed based on the preferences
-			axios.post(apiurl+'get-posts',{'search':user?.preferences}).then((res)=>{
+			axios.post(apiurl+'search',{'search':preferences}).then((res)=>{
 				if(res.data.status){
 					setFeedPosts(res.data.data.posts);
 				}else{
 					setFeedPosts([]);
 				}
-			}).catch(e=>console.log('Error fetching posts: ',e.message));
+				setIsloading(false);
+			}).catch(e=>{
+				console.log('Error fetching posts: ',e.message);
+				setIsloading(false);
+			});
 		}
 
 		const localcontacts = localStorage.getItem('contacts');
@@ -68,7 +74,7 @@ function App() {
 	return (
 		<>
 			<Header />
-			<AppContext.Provider value={{feedPosts,page,setPage,search,setSearch,searchResult,setSearchResult,contacts,setContacts }}>
+			<AppContext.Provider value={{feedPosts,page,setPage,search,setSearch,searchResult,setSearchResult,contacts,setContacts,isloading,setIsloading }}>
 				<Routes>
 					<Route path="/" element={<Index/>} />
 					<Route path="/index" element={<Index/>} />

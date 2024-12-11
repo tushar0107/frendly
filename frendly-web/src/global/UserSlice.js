@@ -5,7 +5,7 @@ const initialState = {
 	user:null,
 	posts:[],
 	token:null,
-	preferences:null,
+	preferences:['nature','photography'],
 }
 const userSlice = createSlice({
 	name:'user',
@@ -17,8 +17,6 @@ const userSlice = createSlice({
 			state.token = payload.token;
 			if(payload.preferences){
 				state.preferences = payload.preferences;
-			}else{
-				state.preferences = ['nature','photography'];
 			}
 		},
 		profilePosts(state,action){

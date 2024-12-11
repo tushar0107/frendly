@@ -5,23 +5,28 @@ import { useNavigate } from "react-router-dom";
 import { AppContext } from "../Context";
 
 export const Search = ()=>{
-	const {search,setSearch,searchResult, setSearchResult} = useContext(AppContext);
+	const {search,setSearch,searchResult, setSearchResult,setIsloading} = useContext(AppContext);
 	const [category,setCategory] = useState(search.category || 'Posts');
 	const navigate = useNavigate();
 	
 	const searchHandle = ()=>{
+		setIsloading(true);
 		setSearch({'search':search.search,'category':category});
 		const form = {
 			search:[search.search],
 			category:category
 		}
-		axios.post(apiurl+'get-posts',form).then((res)=>{
+		axios.post(apiurl+'search',form).then((res)=>{
 			if(res.data.data){
 				setSearchResult(res.data.data);
 			}else{
 				console.log(res.data.message);
 			}
-		}).catch(e=>{console.log('Error in search: ',e)});
+			setIsloading(false);
+		}).catch(e=>{
+			console.log('Error in search: ',e);
+			setIsloading(false);
+		});
 	}
 
 	useEffect(()=>{

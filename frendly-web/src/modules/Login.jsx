@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { login, profilePosts } from "../global/UserSlice";
 import axios from "axios";
 import { apiurl } from "../components/assets";
+import { AppContext } from "../Context";
 
 
 export const Login = ()=>{
+	const {setIsloading} = useContext(AppContext);
 	const [username,setUserName] = useState('');
 	const [password,setPassword] = useState('');
 	const [passShow,setPassShow] = useState(false);
@@ -13,6 +15,7 @@ export const Login = ()=>{
 	const dispatch = useDispatch();
 
 	const loginHandle = (action)=>{
+		setIsloading(true);
 		const data = {username:username,password:password};
 		axios.post(apiurl+action,data).then((res)=>{
 			if(res.data.status){
@@ -22,13 +25,16 @@ export const Login = ()=>{
 				dispatch(login({'user':res.data.data,'token':res.data.token}));
 				dispatch(profilePosts(res.data.posts));
 			}
+			setIsloading(false);
 		}).catch(e=>{
 			console.log('login error: ',e.message);
 			dispatch(login(data));
+			setIsloading(false);
 		})
 	}
 	
 	useEffect(()=>{
+		setIsloading(false);
 		input.current.focus();
 	},[]);
 
