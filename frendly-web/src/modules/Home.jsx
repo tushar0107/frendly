@@ -50,7 +50,7 @@ export const Home = ()=>{
 						</div>
 						<div className="post-context">
 							<span><strong onClick={()=>{navigate('/profile/'+post.username)}}>{post.username}</strong> {post.caption}</span>
-							<div className="post-hashtags">{post.hashtags.join(' ')}</div>
+							{post.hashtags?<div className="post-hashtags">{post.hashtags.join(' ')}</div>:null}
 						</div>
 					</div>)
 				})

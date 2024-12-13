@@ -104,6 +104,8 @@ footer{
 }
 section{
   padding: 1rem 0;
+  width: min(500px, 100%);
+    margin: 0 auto;
 }
 section#main-content{
   width: min(1100px, 100%);
@@ -470,10 +472,10 @@ div#selected-images {
 #selected-images .delete-img-btn{
   position: absolute;
   z-index: 10;
-  top: 5px;
-  right: 5px;
+  top: 10px;
+  right: 10px;
   width: 40px;
-  background-color: #a9a9a96b;
+  background-color: #ffffff6b;
   border-radius: 100%;
 }
 label.select-input input {
@@ -497,6 +499,9 @@ label.select-input img {
   background-color: #00000026;
   border-radius: 100%;
   margin: 0 auto;
+}
+label.select-input p{
+  margin-bottom: 0;
 }
 
 div#selected-carousel {

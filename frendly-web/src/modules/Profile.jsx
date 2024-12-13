@@ -22,6 +22,7 @@ export const Profile = ()=>{
 	useEffect(()=>{
 		if(username){
 			setIsloading(true);
+			setPostsLoading(true);
 			axios.get(apiurl+'get-user/'+username).then((res)=>{
 				if(res.data.status){
 					setProfile(res.data.data);
@@ -33,9 +34,11 @@ export const Profile = ()=>{
 					setPosts(null);
 				}
 				setIsloading(false);
+				setPostsLoading(false);
 			}).catch(e=>{
 				console.log('Error fetching user details: ',e.message);
 				setIsloading(false);
+				setPostsLoading(false);
 			});
 		}
 
@@ -54,7 +57,7 @@ export const Profile = ()=>{
 					</div>
 					{postsLoading?
 					<div id="posts-loading">
-
+						
 					</div>
 					:
 					<div id="posts-segment">
@@ -64,7 +67,7 @@ export const Profile = ()=>{
 							posts.map((post,index)=>{
 								return(
 									<div className="post" key={index}>
-										<img src={`${rooturl}${post.post_content[0]}`} alt="" />
+										<img src={`${post.post_content[0]}`} alt="" />
 										<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
 										<span className="likes"><img src="/assets/tiny-heart.png" className="tiny-img" alt="" />{post.likes}</span>
 									</div>

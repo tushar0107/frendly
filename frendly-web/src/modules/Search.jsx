@@ -53,7 +53,7 @@ export const Search = ()=>{
 							searchResult.posts.map((post,index)=>{
 								return(
 									<div className="post" key={index}>
-										<img src={rooturl+post.post_content[0]} alt="" />
+										<img src={post.post_content[0]} alt="" />
 										<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
 									</div>
 								)
@@ -82,7 +82,7 @@ export const Search = ()=>{
 						searchResult.tags.map((post,index)=>{
 							return(
 								<div className="post" key={index}>
-									<img src={rooturl+post.post_content[0]} alt="" />
+									<img src={post.post_content[0]} alt="" />
 									<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
 								</div>
 							)
