@@ -55,25 +55,6 @@ app.get('/health',async function(req,res){
     res.send('<h2>Hello to express</h2>');
 });
 
-// to find users
-app.get('/api/v1/find-users', function(req,res){
-    mongo.then(async(db)=>{
-        const result = await db.collection('users').find().toArray();
-        if(result){
-            res.status(200).json({
-                'status':true,
-                'data':result,
-                'message':'success'
-            });
-        }else{
-            res.status(500).json({
-                'status':false,
-                'message':'Unable to fetch users'
-            });
-        }
-    });
-});
-
 // login api
 app.post('/api/v1/login',function(req,res){
     const {username,password} = req.body;
@@ -106,7 +87,12 @@ app.post('/api/v1/login',function(req,res){
                 'message':'Username or password incorrect'
             });
         }
-    })
+    }).catch(e=>{
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
 });
 
 // registration API
@@ -130,6 +116,11 @@ app.post('/api/v1/signup',function (req,res) {
                 'message':'Username already exists'
             });
         }
+    }).catch(e=>{
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
     });
 });
 
@@ -154,6 +145,36 @@ app.post('/api/v1/update-details',(req,res)=>{
                 'message':'Failed to update'
             });
         }
+    }).catch(e=>{
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
+});
+
+// create post api
+app.post('/api/v1/create-post',(req,res)=>{
+    mongo.then(async(db)=>{
+        // const result = await db.collection('posts').insertOne(req.body.post);
+        if(result){
+            res.status(200).json({
+                'status':true,
+                'message':'Post Created successfully',
+            });
+        }else{
+            console.log(result);
+            res.status(200).json({
+                'status':false,
+                'message':'Error in creating your post'
+            });
+        }
+
+    }).catch(e=>{
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
     });
 });
 
@@ -162,13 +183,8 @@ app.post('/api/v1/update-details',(req,res)=>{
 app.post('/api/v1/search',(req,res)=>{
     const {search,category} = req.body;
     mongo.then(async(db)=>{
-        var posts = [];
-        var accounts = [];
-        if(category=='Accounts'){
-            accounts = await db.collection('users').find({$text:{$search:search.join(" ")}}).toArray();
-        }else{
-            posts = await db.collection('posts').find({$text:{$search:search.join(" ")}}).toArray();
-        }
+        var posts = posts = await db.collection('posts').find({$text:{$search:search.join(" ")}}).toArray();
+        var accounts = accounts = await db.collection('users').find({$text:{$search:search.join(" ")}},{projection:{username:1,_id:1}}).toArray();
         var result = {posts:posts,accounts:accounts};
         if(result.posts.length || result.accounts.length){
             res.status(200).json({
@@ -183,12 +199,19 @@ app.post('/api/v1/search',(req,res)=>{
                 'message':'Unable to fetch posts'
             });
         }
-    }).catch(e=>console.log('Error fetching posts: ',e.message));
+    }).catch(e=>{
+        console.log('Error fetching posts: ',e.message);
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
 });
 
 app.post('/api/v1/find-tags',(req,res)=>{
+    const re = new RegExp(req.body.search);
     mongo.then(async(db)=>{
-        const result = await db.collection('users').find({username:req.body.search},{username:true}).toArray();
+        const result = await db.collection('users').find({username:{$regex:re}},{projection:{username:1,_id:1}}).toArray();
         if(result){
             res.status(200).json({
                 'status':true,
@@ -202,13 +225,19 @@ app.post('/api/v1/find-tags',(req,res)=>{
                 'message':'Unable to fetch users'
             });
         }
-    }).catch(e=>console.log('Error finding users: ',e.message));
+    }).catch(e=>{
+        console.log('Error finding users: ',e.message);
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
 });
 
 // to fetch user deatils 
 app.get('/api/v1/get-user/:username',(req,res)=>{
     mongo.then(async(db)=>{
-        const result = await db.collection('users').findOne({'username':req.params.username});
+        const result = await db.collection('users').findOne({'username':req.params.username},{projection:{username:1,_id:1}});
         if(result){
             const posts = await db.collection('posts').find({'username':result.username}).toArray();
 
@@ -230,7 +259,13 @@ app.get('/api/v1/get-user/:username',(req,res)=>{
                 'message':'Unable to fetch user'
             });
         }
-    }).catch(e=>console.log(e.message));
+    }).catch(e=>{
+        console.log(e.message);
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
 });
 
 //to get contacts or friends
@@ -249,7 +284,38 @@ app.post('/api/v1/get-contacts',(req,res)=>{
                 'message':'Unable to fetch contacts'
             });
         }
-    }).catch(e=>console.log(e.message));
+    }).catch(e=>{
+        console.log(e.message);
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
+});
+
+
+// to find users
+app.get('/api/v1/find-users', function(req,res){
+    mongo.then(async(db)=>{
+        const result = await db.collection('users').find().toArray();
+        if(result){
+            res.status(200).json({
+                'status':true,
+                'data':result,
+                'message':'success'
+            });
+        }else{
+            res.status(500).json({
+                'status':false,
+                'message':'Unable to fetch users'
+            });
+        }
+    }).catch(e=>{
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
 });
 
 app.listen(port,address,function(){
