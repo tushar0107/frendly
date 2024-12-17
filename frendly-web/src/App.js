@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login, profilePosts } from "./global/UserSlice";
 import { Profile } from "./modules/Profile";
 import { apiurl } from "./components/assets";
+import { Home } from "./modules/Home";
 
 function App() {
 	const {user,preferences} = useSelector((state) => state.user);
@@ -20,6 +21,7 @@ function App() {
 	const [searchResult,setSearchResult] = useState([]);
 	const [search,setSearch] = useState({search:'',category:''});
 	const [isloading,setIsloading] = useState(false);
+	const [userPosts,setUserPosts] = useState([]);
 
 
 	useEffect(()=>{
@@ -55,18 +57,18 @@ function App() {
 			});
 		}
 
-		const localcontacts = localStorage.getItem('contacts');
-		// fetch contacts if not in the localstorage
-		if(!localcontacts?.length){
-			axios.post(apiurl+'get-contacts',{username:user?.username}).then((res)=>{
-				if(res.data.status){
-					localStorage.setItem('contacts',JSON.stringify(res.data.data));
-					setContacts(res.data.data);
-				}else{
-					setContacts(res.data.message);
-				}
-			}).catch(e=>console.log('Error fetching posts: ',e.message));
-		}
+		// const localcontacts = localStorage.getItem('contacts');
+		// // fetch contacts if not in the localstorage
+		// if(!localcontacts?.length){
+		// 	axios.post(apiurl+'get-contacts',{username:user?.username}).then((res)=>{
+		// 		if(res.data.status){
+		// 			localStorage.setItem('contacts',JSON.stringify(res.data.data));
+		// 			setContacts(res.data.data);
+		// 		}else{
+		// 			setContacts(res.data.message);
+		// 		}
+		// 	}).catch(e=>console.log('Error fetching posts: ',e.message));
+		// }
 		
 	},[user,contacts?.length]);
 	
@@ -74,12 +76,13 @@ function App() {
 	return (
 		<>
 			<Header />
-			<AppContext.Provider value={{feedPosts,page,setPage,search,setSearch,searchResult,setSearchResult,contacts,setContacts,isloading,setIsloading }}>
+			<AppContext.Provider value={{feedPosts,setFeedPosts,page,setPage,search,setSearch,searchResult,setSearchResult,contacts,setContacts,isloading,setIsloading,userPosts,setUserPosts }}>
 				<Routes>
 					<Route path="/" element={<Index/>} />
-					<Route path="/index" element={<Index/>} />
-					<Route path="/profile/:username" element={<Profile />} />
-					<Route path="/contact" element={<Contact contacts={contacts} />} />
+					<Route path="index" element={<Index/>}/>
+					<Route path="/profile/:username/posts" element={<Home/>} />
+					<Route path="profile/:username" element={<Profile />} />
+					<Route path="contact" element={<Contact contacts={contacts} />} />
 				</Routes>
 			</AppContext.Provider>
 		</>

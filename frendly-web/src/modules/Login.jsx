@@ -6,7 +6,7 @@ import { apiurl } from "../components/assets";
 import { AppContext } from "../Context";
 
 
-export const Login = ()=>{
+export const Login = ({position})=>{
 	const {setIsloading} = useContext(AppContext);
 	const [username,setUserName] = useState('');
 	const [password,setPassword] = useState('');
@@ -30,7 +30,7 @@ export const Login = ()=>{
 			console.log('login error: ',e.message);
 			dispatch(login(data));
 			setIsloading(false);
-		})
+		});
 	}
 	
 	useEffect(()=>{
@@ -39,26 +39,24 @@ export const Login = ()=>{
 	},[]);
 
 	return(
-		<>
-		 <div id="login-modal">
-			<form action="" id="login-container">
-				<h2>Login</h2>
-				<label htmlFor="username">
-					<input type="text" value={username} onChange={(e)=>setUserName(e.target.value)} ref={input}></input>
-					<span style={username?{top:'0px',left: '.3rem',fontSize: '0.8rem'}:null}>Enter Username</span>
-				</label>
-				<label htmlFor="password">
-					<input type={passShow?"text":"password"} value={password} onChange={(e)=>setPassword(e.target.value)}></input>
-					<span style={password?{top:'0px',left: '.3rem',fontSize: '0.8rem'}:null}>Enter Password</span>
-					<img src={`/assets/${passShow?'hide.png':'show.png'}`} onClick={()=>setPassShow(!passShow)} className="pass-show-hide" alt="" />
-				</label>
-				<div className="submit">
-					<button type="button" className="submit-btn btn" onClick={()=>{loginHandle('login')}}>Submit</button>
-					<span>OR</span> 
-					<button type="button" className="sign-up-btn btn" onClick={()=>{loginHandle('signup')}}>Sign up</button>
-				</div>
-			</form>
-		 </div>
-		 </>
+		<div id="login-modal" className="container" style={{zIndex:'40',inset:'0 0 0 0',left:position?position['Profile']:0}}>
+		<form action="" id="login-container">
+			<h2>Login</h2>
+			<label htmlFor="username">
+				<input type="text" value={username} onChange={(e)=>setUserName(e.target.value)} ref={input}></input>
+				<span style={username?{top:'0px',left: '.3rem',fontSize: '0.8rem'}:null}>Enter Username</span>
+			</label>
+			<label htmlFor="password">
+				<input type={passShow?"text":"password"} value={password} onChange={(e)=>setPassword(e.target.value)}></input>
+				<span style={password?{top:'0px',left: '.3rem',fontSize: '0.8rem'}:null}>Enter Password</span>
+				<img src={`/assets/${passShow?'hide.png':'show.png'}`} onClick={()=>setPassShow(!passShow)} className="pass-show-hide" alt="" />
+			</label>
+			<div className="submit">
+				<button type="button" className="submit-btn btn" onClick={()=>{loginHandle('login')}}>Submit</button>
+				<span>OR</span> 
+				<button type="button" className="sign-up-btn btn" onClick={()=>{loginHandle('signup')}}>Sign up</button>
+			</div>
+		</form>
+		</div>
 	);
 }
