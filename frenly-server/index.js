@@ -1,5 +1,6 @@
 const express = require('express');
 const http = require('http');
+const multer = require('multer');
 const jwt  = require('jsonwebtoken');
 const cors = require('cors');
 const {MongoClient,ObjectId} = require('mongodb');
@@ -26,6 +27,23 @@ const connectDB = async()=>{
 
 const mongo = connectDB(); // connect to database
 
+// define storage for uploading files
+const storage = multer.diskStorage({
+    destination: function(req,file,cb){
+        cb(null,'uploads/post-files/');
+    },
+    filename:function(req,file,cb){
+        var post = req.body.post;
+        var date = Date.now();
+        if(file){
+          //rename the file to avoid conflict
+          cb(null,post.username+'-'+date.toString()+'.'+file.originalname.split('.')[1]);
+        }
+    }
+});
+
+const upload = multer({storage: storage});
+
 const app = express(); //initialize express app
 
 //define cors functionality
@@ -37,6 +55,7 @@ var corsOptions = {
 
 // defining app middlewares
 app.use('/post-images',express.static('uploads/post-images')); // server static files from '/post-images/'
+app.use('/post-files',express.static('uploads/post-files')); // server static files from '/post-files/'
 app.use('/profile',express.static('uploads/profile')); // server static files from '/profile/'
 app.use(express.json());// to parse incoming data to json making the data available in the req
 app.use(express.urlencoded({extended:true})); // enable url encoding for form data parsing
@@ -153,17 +172,51 @@ app.post('/api/v1/update-details',(req,res)=>{
     });
 });
 
-// create post api
-app.post('/api/v1/create-post',(req,res)=>{
+// getposts by logged in user
+app.post('/api/v1/get-posts',(req,res)=>{
     mongo.then(async(db)=>{
-        // const result = await db.collection('posts').insertOne(req.body.post);
-        if(result){
+        const user = await db.collection('users').findOne({'username':req.body.username});
+        if(user){
+            if(user.password == req.body.password){
+                const result = await db.collection('posts').find({'username':req.body.username}).toArray();
+                if(result){
+                    res.status(200).json({
+                        'status':true,
+                        'data':result,
+                    });
+                }
+            }else{
+                res.status(204).json({
+                    'status':false,
+                    'message':'Invalid credentials for fetching posts'
+                });
+            }
+        }else{
+            res.status(404).json({
+                'status':false,
+                'message':'User not found'
+            });
+        }
+    }).catch((e)=>{
+        res.status(500).json({
+            'status':false,
+            'message':e.message
+        });
+    });
+});
+
+// create post api
+app.post('/api/v1/create-post',upload.any('post_content'),(req,res)=>{
+    const post = req.body.post;
+    post.post_content = req.files.map((file)=>{return '/post-files/'+file.filename});
+    mongo.then(async(db)=>{
+        const result = await db.collection('posts').insertOne(post);
+        if(result?.acknowledged){
             res.status(200).json({
                 'status':true,
                 'message':'Post Created successfully',
             });
         }else{
-            console.log(result);
             res.status(200).json({
                 'status':false,
                 'message':'Error in creating your post'
