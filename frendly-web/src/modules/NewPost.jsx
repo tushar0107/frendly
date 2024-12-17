@@ -1,9 +1,9 @@
 import axios from "axios";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { apiurl } from "../components/assets";
 import { useSelector } from "react-redux";
 
-export const NewPost = () => {
+export const NewPost = ({position}) => {
 	const { user } = useSelector((state) => state.user);
 	const fileInpup = useRef();
 	const [files, setfiles] = useState([]);
@@ -13,10 +13,16 @@ export const NewPost = () => {
 	const [tags, setTags] = useState([]);
 	const [searchresult, setSearchResult] = useState("");
 	const [hashtags,setHashtags] = useState('');
+	const [filestoSubmit,setFilestoSubmit] = useState();
 	const [loading,setLoading] = useState(false);
 
 	// handle files selection and preview them
 	const handleFiles = (readfiles) => {
+		if(readfiles.length>10){
+			alert('Please select upto 10 files');
+			return
+		}
+		
 		const fileData = Object.values(readfiles).map(async (file, index) => {
 			// since the FileReader() is an asynchronous function,
 			// we need to wait untill it finishes the file conversion from File() to dataurl
@@ -37,6 +43,7 @@ export const NewPost = () => {
 		// triggers the promise function
 		Promise.all(fileData).then((res) => {
 			setfiles([...files, ...res]);
+			setFilestoSubmit(readfiles);
 		});
 	};
 
@@ -81,30 +88,35 @@ export const NewPost = () => {
 
 	// create post modify details for the post
 	const createPost = () => {
-		const post = {};
 		if (files.length > 0) {
-			setLoading(true);
-			post.post_content = files.map((key)=>{return key.file});
-			post.caption = caption;
-			post.hashtags = hashtags.map((key)=>{ if(key[0]!=='#') return '#'+key; else return key; });
-			post.location = location;
-			post.time = new Date();
-			post.comments = 0;
-			post.likes = 0;
-			post.profile_img = user.profile_img;
-			post.username = user.username;
-			post.tags = tags.map((key) => {return key.username;});
-
-			// make an api request to create the post
-			axios.post(apiurl + "create-post", { post: post }).then((res) => {
-				if (res.data.status) {
-					resetForm();// resets the form after the post has been created successfully
-				}
-				setLoading(false);
-			}).catch((e) => {
-				console.log(e.message);
-				setLoading(false);
-			});
+			
+			if(user?.username){
+				const post = {};
+				setLoading(true);
+				post.caption = caption;
+				post.hashtags = hashtags.length? hashtags.split(' ').map((key)=>{ if(key[0]!=='#') return '#'+key; else return key; }):[];
+				post.location = location;
+				post.time = new Date();
+				post.comments = 0;
+				post.likes = 0;
+				post.profile_img = user.profile_img;
+				post.username = user.username;
+				post.tags = tags.map((key) => {return key.username;});
+			
+				// make an api request to create the post
+				axios.post(apiurl + "create-post", { post: post,post_content:filestoSubmit },{headers:{'Content-Type': 'multipart/form-data'}}).then((res) => {
+					setLoading(false);
+					if (res.data.status) {
+						alert(res.data.message);
+						resetForm();// resets the form after the post has been created successfully
+					}
+				}).catch((e) => {
+					console.log(e.message);
+					setLoading(false);
+				});
+			}else{
+				alert('Please Login or Signup');
+			}
 		} else {
 			alert("Please add at least one file");
 		}
@@ -130,13 +142,8 @@ export const NewPost = () => {
 		};
 	}, [searchpeople]);
 
-	// opens a file selector when we navigate to the add post page
-	useEffect(() => {
-		// fileInpup.current.click();
-	});
-
 	return (
-		<section id="add-post">
+		<div id="add-post" className="container" style={{zIndex:'20',inset:'0 0 0 0',left:position['NewPost']}}>
 			<div id="selected-images">
 				{files.length > 0 ? (
 					files.map((file, index) => {
@@ -152,7 +159,7 @@ export const NewPost = () => {
 				) : (
 					<label className="select-input">
 						<img src="assets/plus.png" alt="" />
-						<p>Add images</p>
+						<p>Add upto 10 files</p>
 						<input type="file" className="file-select" accept="image/*,video/*" onChange={(e)=>{handleFiles(e.target.files);}} multiple ref={fileInpup}></input>
 					</label>
 				)}
@@ -210,7 +217,7 @@ export const NewPost = () => {
 			<div id="create-post-btn">
 				<button onClick={() => createPost()}>Create Post</button>
 			</div>
-		</section>
+		</div>
 	);
 };
 
