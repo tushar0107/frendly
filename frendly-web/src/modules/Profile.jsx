@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import { apiurl, rooturl } from "../components/assets";
-import { logout } from "../global/UserSlice";
+import { login, logout, profilePosts } from "../global/UserSlice";
 import { AppContext } from "../Context";
 
 export const Profile = ({position})=>{
@@ -14,16 +14,21 @@ export const Profile = ({position})=>{
 	const navigate = useNavigate();
 	//fetch user data from redux store
 	var myProfile = useSelector(state=>state.user.user);
-	var myPosts = useSelector(state=>state.user.posts);
+	var myPosts = useSelector(state=>state.user.posts || []);
 	const [profile,setProfile] = useState({...myProfile});
 	const [posts,setPosts] = useState([...myPosts]);
 	const [postsLoading,setPostsLoading] = useState(false);
+	const [settingsOpen, setSettingsOpen] = useState(false);
 
 	const fetchPosts = ()=>{
 		setIsloading(true);
-		axios.post(apiurl+'get-posts',{'username':myProfile.username,'password':myProfile.password}).then((res)=>{
+		axios.post(apiurl+'refresh-profile',{'username':myProfile.username,'user_id':myProfile.id}).then((res)=>{
 			if(res.data.status){
-				setPosts(res.data.data);
+				setPosts(res.data.posts);
+				localStorage.setItem('userdata',JSON.stringify(res.data.data));
+				localStorage.setItem('posts',JSON.stringify(res.data.posts));
+				dispatch(profilePosts(res.data.posts));
+				dispatch(login({'user':res.data.data,'token':res.data.token||''}));
 			}else{
 				alert(res.data.message);
 			}
@@ -69,7 +74,15 @@ export const Profile = ({position})=>{
 							<img src="/assets/user.png" alt="" />
 						</div>
 						<span className="profile-username">{profile?.username}</span>
-						{!username?<button id="logout-btn" onClick={()=>{dispatch(logout())}}><img src="/assets/logout.png" alt="" className="tiny-icon" /></button>:null}
+						{/* post settings buttons will appear if there is no username in the search bar
+						i.e. if viewing other users the settings buttons will hide */}
+						{!username?
+						<div className="profile-action-btns">
+
+						<button onClick={()=>{fetchPosts()}}><img src="/assets/refresh.png" alt="" className="tiny-icon" ></img></button>
+						<button onClick={()=>{}}><img src="/assets/edit-icon.png" className="tiny-icon" alt=""></img></button>
+						<button onClick={()=>{setSettingsOpen(true)}}><img src="/assets/setting.png" className="tiny-icon" alt=""></img></button>
+						</div>:null}
 					</div>
 					{postsLoading?
 					<div id="posts-loading">
@@ -94,6 +107,16 @@ export const Profile = ({position})=>{
 					}
 					</div>
 					}
+				</div>
+				<div id="profile-settings-container" style={settingsOpen?{display:'block'}:{display:'none'}}></div>
+				<div id="profile-settings" style={settingsOpen?{inset:'60px 1rem'}:{inset:'100vh 1rem 0 1rem'}}>
+					<div id="settings-head">
+						<h3>Settings</h3>
+						<button onClick={()=>setSettingsOpen(false)}><img src="/assets/close.png" className="tiny-icon" alt=""></img></button>
+					</div>
+					<div id="settings-body" onClick={()=>setSettingsOpen(false)}>
+						<button onClick={()=>{dispatch(logout())}}><img src="/assets/logout.png" alt="" className="tiny-icon"></img><span>Logout</span></button>
+					</div>
 				</div>
 			</div>
 		)

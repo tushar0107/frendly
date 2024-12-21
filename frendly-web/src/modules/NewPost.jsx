@@ -2,9 +2,11 @@ import axios from "axios";
 import { useContext, useEffect, useRef, useState } from "react";
 import { apiurl } from "../components/assets";
 import { useSelector } from "react-redux";
+import { AppContext } from "../Context";
 
 export const NewPost = ({position}) => {
 	const { user } = useSelector((state) => state.user);
+	const {setIsloading } = useContext(AppContext);
 	const fileInpup = useRef();
 	const [files, setfiles] = useState([]);
 	const [caption, setCaption] = useState("");
@@ -14,7 +16,6 @@ export const NewPost = ({position}) => {
 	const [searchresult, setSearchResult] = useState("");
 	const [hashtags,setHashtags] = useState('');
 	const [filestoSubmit,setFilestoSubmit] = useState();
-	const [loading,setLoading] = useState(false);
 
 	// handle files selection and preview them
 	const handleFiles = (readfiles) => {
@@ -81,9 +82,11 @@ export const NewPost = ({position}) => {
 		setfiles([]);
 		setCaption("");
 		setLocation("");
+		setHashtags('');
 		setSearchPeople("");
 		setTags([]);
 		setSearchResult("");
+		setFilestoSubmit();
 	}
 
 	// create post modify details for the post
@@ -92,27 +95,28 @@ export const NewPost = ({position}) => {
 			
 			if(user?.username){
 				const post = {};
-				setLoading(true);
+				setIsloading(true);
 				post.caption = caption;
 				post.hashtags = hashtags.length? hashtags.split(' ').map((key)=>{ if(key[0]!=='#') return '#'+key; else return key; }):[];
 				post.location = location;
-				post.time = new Date();
+				post.time = new Date().toDateString() + new Date().toLocaleDateString();
 				post.comments = 0;
 				post.likes = 0;
 				post.profile_img = user.profile_img;
 				post.username = user.username;
+				post.user_id = user.id;
 				post.tags = tags.map((key) => {return key.username;});
 			
 				// make an api request to create the post
 				axios.post(apiurl + "create-post", { post: post,post_content:filestoSubmit },{headers:{'Content-Type': 'multipart/form-data'}}).then((res) => {
-					setLoading(false);
+					setIsloading(false);
 					if (res.data.status) {
 						alert(res.data.message);
 						resetForm();// resets the form after the post has been created successfully
 					}
 				}).catch((e) => {
 					console.log(e.message);
-					setLoading(false);
+					setIsloading(false);
 				});
 			}else{
 				alert('Please Login or Signup');
@@ -126,16 +130,15 @@ export const NewPost = ({position}) => {
 	useEffect(() => {
 		const handleSearchPeople = setTimeout(() => {
 			if (searchpeople) {
-				axios
-					.post(apiurl + "find-tags", { search: searchpeople })
+				axios.post(apiurl + "find-tags", { search: searchpeople })
 					.then((res) => {
 						if (res.data.status) {
-							setSearchResult(res.data.users);
+							setSearchResult(res.data.data);
 						}
 					})
 					.catch((e) => console.log("Error: ", e.message));
 			}
-		}, 2000);
+		}, 1000);
 
 		return () => {
 			clearTimeout(handleSearchPeople);
@@ -190,7 +193,7 @@ export const NewPost = ({position}) => {
 			<div className="post-details">
 				<input type="text" placeholder="Tag people" value={searchpeople} onChange={(e) => setSearchPeople(e.target.value)}></input>
 				<div id="tags-suggestions">
-					{((searchpeople && searchresult.length) &&
+					{((searchpeople && searchresult?.length) &&
 						searchresult.map((user, index) => {
 							return (
 								<div className="tag" key={index} onClick={() => addtoTags(user)}>

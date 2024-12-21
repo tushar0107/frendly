@@ -54,7 +54,7 @@ export const Search = ({position})=>{
 								return(
 									// this is from search results where only one post is shown in the feed hence I have used==> setUserPosts([post]);
 									<div className="post" key={index} onClick={()=>{setUserPosts([post]);navigate('/profile/'+search.search+'/posts')}}>
-										<img src={post.post_content[0]} alt="" />
+										<img src={rooturl+post.post_content[0]} alt="" />
 										<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
 									</div>
 								)
