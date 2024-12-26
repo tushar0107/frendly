@@ -3,29 +3,33 @@ const http = require('http');
 const multer = require('multer');
 const jwt  = require('jsonwebtoken');
 const cors = require('cors');
-const {MongoClient,ObjectId} = require('mongodb');
+const { Client } = require('pg');
 const dotenv = require('dotenv');
 
 dotenv.config();
 
 // environment variables
-const uri = process.env.URI;
 const port = process.env.PORT;
 const address = process.env.ADDRESS;
 const secretKey = process.env.JWT_SECRET_KEY;
 
-// start a connection to mongodb server
-const client = new MongoClient(uri);
-const connectDB = async()=>{
-    try{
-        await client.connect();
-        return client.db('frendly');
-    }catch(e){
-        console.log('Error connecting the database: ',e.message);
-    }
-}
+// start a connection to postgresql server
+const client = new Client({
+    user:process.env.DBUSER,
+    password:process.env.PASSWORD,
+    host:process.env.HOST,
+    port:5432,
+    database:process.env.DATABASE,
+    ssl: {
+        rejectUnauthorized: false,
+    },
+});
 
-const mongo = connectDB(); // connect to database
+client.connect().then(()=>{
+        console.log('connected');
+    }).catch(e=>{
+        console.log('Error connecting the database: ',e.message);
+});
 
 // define storage for uploading files
 const storage = multer.diskStorage({
@@ -71,303 +75,433 @@ app.get('/',async function(req,res){
 
 //health 
 app.get('/health',async function(req,res){
-    res.send('<h2>Hello to express</h2>');
+    res.send('<h2>App is running</h2>');
 });
 
 // login api
 app.post('/api/v1/login',function(req,res){
     const {username,password} = req.body;
-    mongo.then(async function(db) {
-        const result = await db.collection('users').findOne({'username':username});
-        const posts = await db.collection('posts').find({'username':result.username}).toArray();
-        // create token
-        var token;
-        try{
-            token = jwt.sign(
-                {
-                    username:username,
-                    password:password
-                },secretKey,{expiresIn:'1d'}
-            );
-        }catch{e=>{console.log(e)}};
-
-        if(result){
-            res.status(200).json({
-                'status':true,
-                'data':result,
-                'posts':posts,
-                'token':token,
-                'message':'Success'
-            });
-        }else{
-            res.status(401).json({
+    client.query(`SELECT id,first_name,last_name,username FROM users WHERE username='${username}';`, (err,user)=>{
+        if(err){
+            res.status(500).json({
                 'status':false,
                 'data':null,
-                'message':'Username or password incorrect'
+                'error':err.message,
+                'message':'Database error in logging in'
             });
+        }else if(user.rows.length){
+            client.query(`SELECT p.*,l.count AS like_count,u.first_name,u.last_name,u.username FROM posts p LEFT JOIN likes_count l ON p.id=l.post_id LEFT JOIN users u ON p.author_id=u.id WHERE author_id=${user.rows[0].id};`,(err,posts)=>{
+                if(err){
+                    res.status(200).json({
+                        'status':true,
+                        'data':user.rows[0],
+                        'error':err,
+                        'message':'Database error in fetching posts'
+                    });
+                }else{
+                    res.status(200).json({
+                        'status':true,
+                        'data':user.rows[0],
+                        'posts':posts.rows,
+                    });
+                }
+            });
+        }else{
+            res.status(200).json({
+                'status':false,
+                'message':'Incorrect Username'
+            });           
         }
-    }).catch(e=>{
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
     });
 });
 
 // registration API
 app.post('/api/v1/signup',function (req,res) {
     const formdata = req.body;
-    mongo.then(async(db)=>{
-        const result = await db.collection('users').findOne({'username':formdata.username});
-        if(!result){
-            const result = await db.collection('users').insertOne(formdata);
-            if(result){
+    client.query(`SELECT username FROM users WHERE username='${formdata.username}';`,(err,result)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'data':null,
+                'error':err,
+                'message':'Database error'
+            });
+        }else {
+            if(result?.rows.length > 0){
                 res.status(200).json({
-                    'status':true,
-                    'data':formdata,
-                    'posts':[],
-                    'message':'Registered successfully'
+                    'status':false,
+                    'data':null,
+                    'message':'Username already exists'
+                });
+            }else{
+                client.query(`INSERT INTO users(first_name,last_name,username,password) VALUES('${formdata.first_name}','${formdata.last_name}','${formdata.username}','${formdata.password}')`,async(err,result)=>{
+                    if(err){
+                        res.status(500).json({
+                            'status':false,
+                            'data':null,
+                            'error':err,
+                            'message':'Database error'
+                        });
+                    }else{
+                        if(result?.rows.length==0){
+                            res.status(200).json({
+                                'status':true,
+                                'data':result.rows,
+                                'message':'Registered successfully. Please login'
+                            });
+                        }
+                    }
                 });
             }
-        }else{
-            res.status(200).json({
-                'status':false,
-                'message':'Username already exists'
-            });
         }
-    }).catch(e=>{
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
     });
+    
 });
 
 //update user details
 app.post('/api/v1/update-details',(req,res)=>{
     const formdata = req.body;
     const {username} = formdata;
-    mongo.then(async(db)=>{
-        const result = await db.collection('users').updateOne({'username':username},{$set:query});
-        if(result.acknowledged){
-            const user = await db.collection('users').findOne({'username':username});
-            if(user){
-                res.status(200).json({
-                    'status':true,
-                    'data':user,
-                    'message':'Updated successfully'
-                });
-            }
-        }else{
+    client.query(`
+        UPDATE users SET ${formdata.username? `username=${formdata.username},`: ''}
+                         ${formdata.first_name? `first_name=${formdata.first_name},`:''}
+                         ${formdata.last_name? `last_name=${formdata.last_name},`:''} 
+                         ${formdata.password? `password=${formdata.password},`:''}
+                         1=1 WHERE id=${formdata.id};
+        `,(err,result)=>{
+        if(err){
             res.status(500).json({
                 'status':false,
-                'message':'Failed to update'
+                'data':null,
+                'error':err.message,
+                'message':'Database error'
             });
+        }else{
+            res.status(200).json({
+                'status':true,
+                'data':user,
+                'message':'Updated successfully'
+            });
+                
         }
-    }).catch(e=>{
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
     });
 });
 
 // getposts by logged in user
-app.post('/api/v1/get-posts',(req,res)=>{
-    mongo.then(async(db)=>{
-        const user = await db.collection('users').findOne({'username':req.body.username});
-        if(user){
-            if(user.password == req.body.password){
-                const result = await db.collection('posts').find({'username':req.body.username}).toArray();
-                if(result){
-                    res.status(200).json({
-                        'status':true,
-                        'data':result,
-                    });
-                }
-            }else{
-                res.status(204).json({
-                    'status':false,
-                    'message':'Invalid credentials for fetching posts'
-                });
-            }
-        }else{
-            res.status(404).json({
-                'status':false,
-                'message':'User not found'
-            });
-        }
-    }).catch((e)=>{
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
-    });
-});
-
-// create post api
-app.post('/api/v1/create-post',upload.any('post_content'),(req,res)=>{
-    const post = req.body.post;
-    post.post_content = req.files.map((file)=>{return '/post-files/'+file.filename});
-    mongo.then(async(db)=>{
-        const result = await db.collection('posts').insertOne(post);
-        if(result?.acknowledged){
-            res.status(200).json({
-                'status':true,
-                'message':'Post Created successfully',
-            });
-        }else{
-            res.status(200).json({
-                'status':false,
-                'message':'Error in creating your post'
-            });
-        }
-
-    }).catch(e=>{
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
-    });
-});
-
-// to get posts on search based on search queries or for feeds based on user's preferences
-// search: 'any array of string', category: 'post' / 'account' / 'videos' / 'tags
-app.post('/api/v1/search',(req,res)=>{
-    const {search,category} = req.body;
-    mongo.then(async(db)=>{
-        var posts = posts = await db.collection('posts').find({$text:{$search:search.join(" ")}}).toArray();
-        var accounts = accounts = await db.collection('users').find({$text:{$search:search.join(" ")}},{projection:{username:1,_id:1}}).toArray();
-        var result = {posts:posts,accounts:accounts};
-        if(result.posts.length || result.accounts.length){
-            res.status(200).json({
-                'status':true,
-                'data':result,
-                'message':'success'
-            });
-        }else{
-            res.status(200).json({
+app.post('/api/v1/refresh-profile',(req,res)=>{
+    const {user_id} = req.body;
+    client.query(`SELECT id,username,first_name,last_name FROM users WHERE id=${user_id};`,(err,user)=>{
+        if(err){
+            res.status(500).json({
                 'status':false,
                 'data':null,
-                'message':'Unable to fetch posts'
+                'error':err,
+                'message':'Database error in fetching user data'
+            });
+        }else{
+            client.query(`SELECT p.*,l.count AS like_count,u.first_name,u.last_name,u.username FROM posts p LEFT JOIN likes_count l ON p.id=l.post_id LEFT JOIN users u ON p.author_id=u.id WHERE author_id=${user_id};`,(err,posts)=>{
+                if(err){
+                    res.status(500).json({
+                        'status':false,
+                        'data':null,
+                        'error':err,
+                        'message':'Database error in fetching posts'
+                    });
+                }else{
+                    res.status(200).json({
+                        'status':true,
+                        'data':user.rows[0],
+                        'posts':posts.rows,
+                    });
+                }
             });
         }
-    }).catch(e=>{
-        console.log('Error fetching posts: ',e.message);
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
     });
+    
+});
+//SELECT u.id,u.username,u.first_name,u.last_name, p.* FROM users u LEFT JOIN posts p ON u.id=p.author_id WHERE u.id=${user_id};
+// create post api
+app.post('/api/v1/create-post',upload.any('post_content'),async(req,res)=>{
+    const post = req.body.post;
+    post.post_content = req.files.map((file)=>{return `/post-files/${file.filename.toString()}`});
+    const values = [
+        post.user_id,
+        post.post_content,
+        post.caption,
+        post.hashtags?.map((h)=>{return h}),
+        post.location
+    ];
+    await client.query('BEGIN;');
+    const newPost = await client.query(`INSERT INTO posts(author_id,post_content,caption,hashtags,location) VALUES($1, $2, $3, $4, $5) RETURNING id;`,values);
+    const post_id = newPost.rows[0].id;
+    await client.query(`INSERT INTO likes_count (post_id,count) VALUES (${post_id}, 0);`);
+    const result = await client.query('COMMIT;');
+    if(result){
+        res.status(200).json({
+            'status':true,
+            'message':'Post Created successfully'
+        });
+    }else{
+        res.status(200).json({
+            'status':false,
+            'data':null,
+            'message':'Server Error in creating post'
+        });
+    }
 });
 
-app.post('/api/v1/find-tags',(req,res)=>{
-    const re = new RegExp(req.body.search);
-    mongo.then(async(db)=>{
-        const result = await db.collection('users').find({username:{$regex:re}},{projection:{username:1,_id:1}}).toArray();
+// from frontend if post is already liked
+// >>> delete query in the likes table and update query in the posts table to decrement count
+// from frontend if post is not liked
+// >>> insert query with on conflict do nothing and update query in the posts table to increment count
+// api to add a like to a post
+app.post('/api/v1/like-post',async(req,res)=>{
+    const {post_id,user_id,like} = req.body;
+    if(like===true){
+        //to like the post
+        await client.query('BEGIN;');
+        await client.query(`INSERT INTO likes(post_id,user_id) VALUES(${post_id},${user_id}) ON CONFLICT DO NOTHING;`);
+        await client.query(`UPDATE posts SET like_count=like_count+1 WHERE id=${post_id};`);
+        const result = await client.query('COMMIT;');
         if(result){
             res.status(200).json({
                 'status':true,
-                'users':result,
-                'message':'success'
+                'data':null,
+                'message':'liked'
             });
         }else{
             res.status(200).json({
                 'status':false,
                 'data':null,
-                'message':'Unable to fetch users'
+                'message':'Error in liking post'
             });
         }
-    }).catch(e=>{
-        console.log('Error finding users: ',e.message);
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
+    }else if(like===false){
+        // to unlike the post
+        await client.query('BEGIN;');
+        await client.query(`DELETE FROM likes WHERE post_id = ${post_id} AND user_id = ${user_id};`);
+        await client.query(`UPDATE posts SET like_count=GREATEST(like_count-1,0) WHERE id=${post_id};`);
+        const result = await client.query('COMMIT;');
+        if(result){
+            res.status(200).json({
+                'status':true,
+                'data':null,
+                'message':'unliked'
+            });
+        }else{
+            res.status(500).json({
+                'status':false,
+                'error':err.message,
+                'message':'Database error'
+            });
+        }
+    }
+});
+
+// api to add a like to a post
+app.post('/api/v1/comment-post',(req,res)=>{
+    const {post_id,user_id,comment} = req.body.data;
+    client.query(`INSERT INTO comments(post_id,user_id,comment) VALUES(${post_id,user_id,comment});`,(err,result)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'error':err,
+                'message':'Database error'
+            });
+        }else{
+            res.status(500).json({
+                'status':true,
+                'data':null,
+            });
+        }
+    });
+});
+
+//api for feed posts
+app.post('/api/v1/feed-posts',(req,res)=>{
+    const {preferences,user_id} = req.body;
+    client.query(`
+                SELECT u.id,u.username, 
+                        p.*,
+                        l.user_id AS liked_acc_id
+                FROM posts p
+                INNER JOIN users u ON u.id=p.author_id
+                LEFT JOIN likes l ON p.id=l.post_id AND l.user_id=${user_id} 
+                ORDER BY p.created_at DESC;
+                `,(err,result)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'error':err.message,
+                'message':'Database error'
+            });
+        }else{
+            res.status(200).json({
+                'status':true,
+                'data':result.rows
+            });
+        }
+    });
+});
+
+// WHERE p.created_at >= NOW() - INTERVAL '2 days'
+// to get posts on search based on search queries or for feeds based on user's preferences
+// search: 'any array of string', category: 'post' / 'account' / 'videos' / 'tags
+app.post('/api/v1/search',(req,res)=>{
+    const {search} = req.body;
+    // client.query(`SELECT u.id,u.username,u.first_name,u.last_name, p.* FROM users u LEFT JOIN posts p ON u.id=p.author_id WHERE p.caption ~* '.*${preferences}.*';`,(err,result)=>{
+    client.query(`SELECT u.id,u.username, p.*,l.count AS like_count FROM posts p INNER JOIN users u ON u.id=p.author_id LEFT JOIN likes_count l ON p.id=l.post_id WHERE u.username='${search}' OR p.caption ~* '.*${search}.*';`,(err,posts)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'error':err,
+                'message':'Database error'
+            });
+        }else{
+            client.query(`SELECT id,username,first_name,last_name FROM users WHERE username ~* '.*${search}.*';`,(err,accounts)=>{
+                if(err){
+                    res.status(500).json({
+                        'status':false,
+                        'error':err,
+                        'message':'Database error'
+                    });
+                }else{    
+                    res.status(200).json({
+                        'status':true,
+                        'data':{
+                            'posts':posts.rows,
+                            'accounts':accounts.rows
+                        },
+                    });
+                }
+            });
+        }
+    });
+});
+
+//searches users to tag into while creating new posts
+app.post('/api/v1/find-tags',(req,res)=>{
+    const {search} = req.body;
+    const values = [`.*${search}.*`,`.*${search}.*`,`.*${search}.*`];
+    client.query(`SELECT id,username,first_name,last_name FROM users WHERE username ~* $1 OR first_name ~* $2 OR last_name ~* $3;`,values,(err,result)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'data':null,
+                'error':err.message,
+                'message':'Database error'
+            });
+        }else{
+            res.status(200).json({
+                'status':true,
+                'data':result.rows,
+                'message':'success'
+            });
+        }
     });
 });
 
 // to fetch user deatils 
 app.get('/api/v1/get-user/:username',(req,res)=>{
-    mongo.then(async(db)=>{
-        const result = await db.collection('users').findOne({'username':req.params.username},{projection:{username:1,_id:1}});
-        if(result){
-            const posts = await db.collection('posts').find({'username':result.username}).toArray();
-
+    client.query(`SELECT u.id,u.username,u.first_name,u.last_name, p.*, l.count AS like_count FROM users u LEFT JOIN posts p ON u.id=p.author_id LEFT JOIN likes_count l ON p.id=l.post_id WHERE u.username='${req.params.username}';`,(err,result)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'data':null,
+                'error':err.message,
+                'message':'Database error'
+            });
+        }else if(result.rows.length){
+            var {id,first_name,last_name,username} = result.rows[0];
             res.status(200).json({
                 'status':true,
-                'data':result,
-                'posts':posts,
+                'data':{id,first_name,last_name,username},
+                'posts':result.rows[0].author_id? result.rows:[],
                 'message':'success'
             });
-        }else if(result==null){
-            res.status(200).json({
-                'status':true,
-                'data': {username:'User not found'},
-                'message':'User does not exists'
-            });
-        }else{
-            res.status(200).json({
-                'status':false,
-                'message':'Unable to fetch user'
-            });
         }
-    }).catch(e=>{
-        console.log(e.message);
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
     });
 });
 
 //to get contacts or friends
 app.post('/api/v1/get-contacts',(req,res)=>{
-    mongo.then(async(db)=>{
-        const result = await db.collection('users').find().toArray();
-        if(result){
-            res.status(200).json({
-                'status':true,
-                'data':result,
-                'message':'success'
+    client.query(`SELECT id,username,first_name|| ' ' || last_name AS name FROM users;`,(err,result)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'data':null,
+                'error':err.message,
+                'message':'Database error'
             });
         }else{
             res.status(200).json({
-                'status':false,
-                'message':'Unable to fetch contacts'
+                'status':true,
+                'data':result.rows,
+                'message':'success'
             });
         }
-    }).catch(e=>{
-        console.log(e.message);
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
     });
 });
 
-
-// to find users
-app.get('/api/v1/find-users', function(req,res){
-    mongo.then(async(db)=>{
-        const result = await db.collection('users').find().toArray();
-        if(result){
-            res.status(200).json({
-                'status':true,
-                'data':result,
-                'message':'success'
-            });
-        }else{
+//api for change password
+app.post('/api/v1/change-password',(req,res)=>{
+    client.query(`SELECT id,username,password FROM users WHERE username='${req.body.username}';`,(err,user)=>{
+        if(err){
             res.status(500).json({
                 'status':false,
-                'message':'Unable to fetch users'
+                'data':null,
+                'error':err.message,
+                'message':'Database error'
+            });
+        }else{
+            if(user.rows.length==1){
+                const {id,username,password} = user.rows[0];
+                if(req.body.oldPass == password){
+                    client.query(`UPDATE users SET password=${req.body.newPass} WHERE id=${id};`,(err,result)=>{
+                        if(err){
+                            res.status(500).json({
+                                'status':false,
+                                'data':null,
+                                'error':err.message,
+                                'message':'Database error'
+                            });
+                        }else{
+                            res.status(200).json({
+                                'status':true,
+                                'data':null,
+                                'message':'Password updated successfully'
+                            });
+                        }
+                    });
+                }else{
+                    res.status(200).json({
+                        'status':false,
+                        'data':null,
+                        'message':'Incorrect old Password.'
+                    });
+                }
+            }
+        }
+    })
+});
+
+// to find users
+app.get('/api/v1/find-users/:next', function(req,res){
+    client.query(`SELECT id,username,first_name,last_name FROM users LIMIT 10 OFFSET ${req.params.next};`,(err,result)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'data':null,
+                'error':err.message,
+                'message':'Database error'
+            });
+        }else{
+            res.status(200).json({
+                'status':true,
+                'data':result.rows,
+                'message':'success'
             });
         }
-    }).catch(e=>{
-        res.status(500).json({
-            'status':false,
-            'message':e.message
-        });
     });
 });
 
