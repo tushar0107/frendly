@@ -443,6 +443,47 @@ app.post('/api/v1/get-contacts',(req,res)=>{
     });
 });
 
+//api for change password
+app.post('/api/v1/change-password',(req,res)=>{
+    client.query(`SELECT id,username,password FROM users WHERE username='${req.body.username}';`,(err,user)=>{
+        if(err){
+            res.status(500).json({
+                'status':false,
+                'data':null,
+                'error':err.message,
+                'message':'Database error'
+            });
+        }else{
+            if(user.rows.length==1){
+                const {id,username,password} = user.rows[0];
+                if(req.body.oldPass == password){
+                    client.query(`UPDATE users SET password=${req.body.newPass} WHERE id=${id};`,(err,result)=>{
+                        if(err){
+                            res.status(500).json({
+                                'status':false,
+                                'data':null,
+                                'error':err.message,
+                                'message':'Database error'
+                            });
+                        }else{
+                            res.status(200).json({
+                                'status':true,
+                                'data':null,
+                                'message':'Password updated successfully'
+                            });
+                        }
+                    });
+                }else{
+                    res.status(200).json({
+                        'status':false,
+                        'data':null,
+                        'message':'Incorrect old Password.'
+                    });
+                }
+            }
+        }
+    })
+});
 
 // to find users
 app.get('/api/v1/find-users/:next', function(req,res){
