@@ -1,23 +1,27 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { HeadBar } from "./Base";
 
 
 export const Contact = ({contacts})=>{
 	const navigate = useNavigate();
 	return(
+		<>
+		<HeadBar title={'Contacts'}/>
 		<section id="contact-page">
 			<div className="accounts">
 				{(contacts?.length && contacts.map(((contact,index)=>{
 					return(
-						<div className="profile" onClick={()=>navigate('/chat/'+contact.username)} key={index}>
+						<Link to={'/chat/'+contact.username} className="profile" key={index}>
 							<img src="/assets/user.png" className="small-icon" alt="" />
 							<div className="profile-details">
-								<span>{'Actual Name'}</span><br />
+								<div><span>{contact.name}</span></div>
 								<span className="username">{contact.username}</span>
 							</div>
-						</div>
+						</Link>
 					)
 				}))) ||( 'No Contacts')}
 			</div>
 		</section>
+		</>
 	);
 }
