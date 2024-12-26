@@ -28,6 +28,7 @@ const userSlice = createSlice({
 			localStorage.removeItem('posts');
 			localStorage.removeItem('token');
 			localStorage.removeItem('preferences');
+			localStorage.removeItem('contacts');
 		}
 	}
 });

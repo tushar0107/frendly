@@ -31,12 +31,14 @@ export const Login = ({position})=>{
 		setIsloading(true);
 		const data = {username:username,password:password};
 		axios.post(apiurl+action,data).then((res)=>{
-			if(res.data.status){
+			if(res.data.status && action==='login'){
 				localStorage.setItem('userdata',JSON.stringify(res.data.data));
 				localStorage.setItem('posts',JSON.stringify(res.data.posts));
 				localStorage.setItem('token',JSON.stringify(res.data.token));
 				dispatch(login({'user':res.data.data,'token':res.data.token}));
 				dispatch(profilePosts(res.data.posts));
+			}else if(res.data.status && action==='signup'){
+				alert(res.data.message);
 			}
 			setIsloading(false);
 		}).catch(e=>{

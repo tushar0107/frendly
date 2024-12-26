@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Footer } from "./Base";
+import { Footer, Header } from "./Base";
 import { AppContext } from "../Context";
 import {Search} from "./Search";
 import {Home} from "./Home";
@@ -65,6 +65,7 @@ const Index = ()=>{
 	
 	return(
 		<>
+			<Header />
 			<main id="main-content">
 				<Home position={pagePos}/>
 				<Search position={pagePos}/>

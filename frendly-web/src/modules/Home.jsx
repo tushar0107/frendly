@@ -1,25 +1,37 @@
-import { useNavigate, useParams } from "react-router-dom";
-import { rooturl } from "../components/assets";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { apiurl, rooturl } from "../components/assets";
 import React, { useContext, useMemo } from "react";
 import { AppContext } from "../Context";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import { HeadBar } from "./Base";
 
 export const Home = ({position})=>{
 	const {username} = useParams();
-	const {feedPosts,userPosts} = useContext(AppContext);
-	const navigate = useNavigate();
+	const {user} = useSelector(state=>state.user);
+	const {feedPosts,setFeedPosts,userPosts} = useContext(AppContext);
 
 	const likePost = (post,index)=>{
-		// console.log(post);
-		if(post.isLiked){
-			post.isLiked = false;
-			post.likes--;
+		if(post.liked_acc_id !== null){
+			post.liked_acc_id = null;
+			post.like_count--;
 			document.getElementById('like-btn-'+index).innerHTML = '<img src="/assets/heart.png" alt="" />';
-			document.getElementById('like-count-'+index).innerHTML = post.likes;
+			document.getElementById('like-count-'+index).innerHTML = Math.max(post.like_count,0);
+			axios.post(apiurl+'like-post',{'post_id':post.id,'user_id':post.author_id,'like':false}).then((res)=>{
+				var tempposts = [...feedPosts];
+				tempposts[index].liked_acc_id=null;
+				setFeedPosts(tempposts);
+			});
 		}else{
-			post.isLiked = true;
-			post.likes++;
+			post.liked_acc_id = user.id;
+			post.like_count++;
 			document.getElementById('like-btn-'+index).innerHTML = '<img src="/assets/heart-pink.png" alt="" />';
-			document.getElementById('like-count-'+index).innerHTML = post.likes;
+			document.getElementById('like-count-'+index).innerHTML = post.like_count;
+			axios.post(apiurl+'like-post',{'post_id':post.id,'user_id':post.author_id,'like':true}).then((res)=>{
+				var tempposts = [...feedPosts];
+				tempposts[index].liked_acc_id=user.id;
+				setFeedPosts(tempposts);
+			});
 		}
 	}
 
@@ -34,36 +46,47 @@ export const Home = ({position})=>{
 
 	if(posts?.length){
 		return(
+			<>
+			{username?<HeadBar title={username}/>:null}
 			<div id="post-container" className="container" style={{zIndex:'10',inset:'0 0 0 0',left:position?position['Home']:0}}>
 				{
 					posts.length && posts.map((post,index)=>{
 						return(
 						<div className="post-block" onDoubleClick={()=>{likePost(post,index)}} key={index}>
 							<div className="post-head">
-								<span>
+								<Link to={'/profile/'+post.username}>
 									<img src="/assets/user.png" alt=""></img>
-									<span onClick={()=>{navigate('/profile/'+post.username)}}>{post.username}</span>
-								</span>
+									<div>
+										<span>{post.username}</span>
+										<span className='misc'>{post.location || new Date(post.updated_at).toDateString()}</span>
+									</div>
+								</Link>
 								<img src="/assets/ellipsis.png" className="post-more-btn" alt=""></img>
 							</div>
 							<div className="post-content">
 								{post.post_content.length && post.post_content.map((img,index)=>{
-									return(
-										<img src={`${rooturl}${img}`} key={index} alt=""></img>
-									)
+									if(img.split('.').pop()!=='mp4'){
+										return(
+											<img src={`${rooturl}${img}`} key={index} alt=""></img>
+										)
+									}else{
+										return(
+											<video src={`${rooturl}${img}`} key={index} controls></video>
+										)
+									}
 								})
 								}
 							</div>
 							<div className="post-actions">
 								<div className="post-action-like-comment">
 									<a className="like-btn" id={'like-btn-'+index} onClick={()=>{likePost(post,index)}}>
-										{post.isLiked?
+										{post.liked_acc_id===user?.id?
 										<img src="/assets/heart-pink.png" alt="" />
 										: 
 										<img src="/assets/heart.png" alt="" />
 										}
 									</a>
-									<a id={'like-count-'+index}>{post.likes}</a>
+									<a id={'like-count-'+index}>{post.like_count}</a>
 									<a className="comment-btn">
 										<img src="/assets/comment.png" alt="" />
 									</a>
@@ -74,13 +97,14 @@ export const Home = ({position})=>{
 								</div>
 							</div>
 							<div className="post-context">
-								<span><strong onClick={()=>{navigate('/profile/'+post.username)}}>{post.username}</strong> {post.caption}</span>
+								{post.caption?<Link to={'/profile/'+post.username}><strong>{post.username}</strong> {post.caption}</Link>:''}
 								{post.hashtags?<div className="post-hashtags">{post.hashtags.join(' ')}</div>:null}
 							</div>
 						</div>)
 					})
 				}
 			</div>
+			</>
 		);
 	}else{
 		return(

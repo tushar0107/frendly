@@ -32,12 +32,14 @@ export const NewPost = ({position}) => {
 				var reader = new FileReader();
 				reader.readAsDataURL(file);
 				reader.onload = function () {
-					resolve({
-						name: file.name,
-						index: index,
-						file: reader.result,
-						type: file.type,
-					});
+					if(file.size < 25000000){
+						resolve({
+							name: file.name,
+							index: index,
+							file: reader.result,
+							type: file.type.split('/')[0],
+						});
+					}
 				};
 			});
 		});
@@ -97,9 +99,9 @@ export const NewPost = ({position}) => {
 				const post = {};
 				setIsloading(true);
 				post.caption = caption;
-				post.hashtags = hashtags.length? hashtags.split(' ').map((key)=>{ if(key[0]!=='#') return '#'+key; else return key; }):[];
+				post.hashtags = hashtags.length? hashtags.split(' ').map((key)=>{ if(key[0]!=='#') return '#'+key; else return key; }):[''];
 				post.location = location;
-				post.time = new Date().toDateString() + new Date().toLocaleDateString();
+				post.created_at = new Date().toDateString() + new Date().toLocaleDateString();
 				post.comments = 0;
 				post.likes = 0;
 				post.profile_img = user.profile_img;
@@ -152,7 +154,11 @@ export const NewPost = ({position}) => {
 					files.map((file, index) => {
 						return (
 							<div className="image" key={index} style={{}}>
-								<img src={file.file} alt=""></img>
+								{file.type==='image'?
+								<img src={file.file} alt=""></img>:
+								file.type==='video'?
+								<video src={file.file} controls></video>
+								:null}
 								<button className="delete-img-btn" onClick={() => deleteImg(index)}>
 									<img src="assets/close.png" alt=""></img>
 								</button>
@@ -163,7 +169,7 @@ export const NewPost = ({position}) => {
 					<label className="select-input">
 						<img src="assets/plus.png" alt="" />
 						<p>Add upto 10 files</p>
-						<input type="file" className="file-select" accept="image/*,video/*" onChange={(e)=>{handleFiles(e.target.files);}} multiple ref={fileInpup}></input>
+						<input type="file" className="file-select" accept="image/*,video/mp4" onChange={(e)=>{handleFiles(e.target.files);}} multiple ref={fileInpup}></input>
 					</label>
 				)}
 			</div>
@@ -173,7 +179,11 @@ export const NewPost = ({position}) => {
 						? files.map((file, index) => {
 							return (
 								<div className="image" key={index}>
-									<img src={file.file} alt=""></img>
+									{file.type==='image'?
+								<img src={file.file} alt=""></img>:
+								file.type==='video'?
+								<video src={file.file}></video>
+								:null}
 								</div>
 							);
 						}): null}

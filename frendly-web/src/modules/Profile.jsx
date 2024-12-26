@@ -1,11 +1,12 @@
 import { useDispatch, useSelector } from "react-redux";
 import { Login } from "./Login";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import { apiurl, rooturl } from "../components/assets";
 import { login, logout, profilePosts } from "../global/UserSlice";
 import { AppContext } from "../Context";
+import { ChangePassword, HeadBar } from "./Base";
 
 export const Profile = ({position})=>{
 	const {username} = useParams();
@@ -18,7 +19,6 @@ export const Profile = ({position})=>{
 	const [profile,setProfile] = useState({...myProfile});
 	const [posts,setPosts] = useState([...myPosts]);
 	const [postsLoading,setPostsLoading] = useState(false);
-	const [settingsOpen, setSettingsOpen] = useState(false);
 
 	const fetchPosts = ()=>{
 		setIsloading(true);
@@ -67,58 +67,57 @@ export const Profile = ({position})=>{
 
 	if(profile){
 		return(
-			<div className="container" style={{zIndex:'40',inset:'0 0 0 0',left:position?position['Profile']:0}}>
-				<div id="profile-container">
-					<div id="profile-banner">
-						<div id="profile-photo">
-							<img src="/assets/user.png" alt="" />
-						</div>
-						<span className="profile-username">{profile?.username}</span>
-						{/* post settings buttons will appear if there is no username in the search bar
-						i.e. if viewing other users the settings buttons will hide */}
-						{!username?
-						<div className="profile-action-btns">
+			<>
+				{username?<HeadBar title={username}/>:null}
+				<div className="container" style={{zIndex:'40',inset:'0 0 0 0',left:position?position['Profile']:0}}>
+					<div id="profile-container">
+						<div id="profile-banner">
+							<div id="profile-photo">
+								<img src="/assets/user.png" alt="" />
+							</div>
+							<span className="profile-username">{profile?.username}</span>
+							{/* post settings buttons will appear if there is no username in the search bar
+							i.e. if viewing other users the settings buttons will hide */}
+							{!username?
+							<div className="profile-action-btns">
 
-						<button onClick={()=>{fetchPosts()}}><img src="/assets/refresh.png" alt="" className="tiny-icon" ></img></button>
-						<button onClick={()=>{}}><img src="/assets/edit-icon.png" className="tiny-icon" alt=""></img></button>
-						<button onClick={()=>{setSettingsOpen(true)}}><img src="/assets/setting.png" className="tiny-icon" alt=""></img></button>
-						</div>:null}
-					</div>
-					{postsLoading?
-					<div id="posts-loading">
-						
-					</div>
-					:
-					<div id="posts-segment">
-					{ posts?.length ? 
-						<div id="profile-posts" className="segment-block">
-						{
-							posts.map((post,index)=>{
-								return(
-									<div className="post" key={index} onClick={()=>{setUserPosts(posts);navigate('/profile/'+profile?.username+'/posts')}}>
-										<img src={rooturl+`${post.post_content[0]}`} alt="" />
-										<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
-										<span className="likes"><img src="/assets/tiny-heart.png" className="tiny-img" alt="" />{post.likes}</span>
-									</div>
-								)
-							})
+							<button onClick={()=>{fetchPosts()}}><img src="/assets/refresh.png" alt="" className="tiny-icon" ></img></button>
+							<button onClick={()=>{}}><img src="/assets/edit-icon.png" className="tiny-icon" alt=""></img></button>
+							<Link to={'/settings'}><img src="/assets/setting.png" className="tiny-icon" alt=""></img></Link>
+							</div>:null}
+						</div>
+						{postsLoading?
+						<div id="posts-loading">
+							<div id="loader"></div>
+						</div>
+						:
+						<div id="posts-segment">
+						{ posts?.length ? 
+							<div id="profile-posts" className="segment-block">
+							{
+								posts.map((post,index)=>{
+									return(
+										<Link to={'/profile/posts/'+profile?.username} className="post" key={index} onClick={()=>{setUserPosts(posts)}}>
+											{post.post_content[0].split('.').pop()!=='mp4'?<img src={rooturl+`${post.post_content[0]}`} alt="" ></img>:
+											<video src={rooturl+`${post.post_content[0]}`}></video>}
+											{post.post_content.length>1?<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>:null}
+											<span className="likes"><img src="/assets/tiny-heart.png" className="tiny-img" alt="" />{post.like_count}</span>
+										</Link>
+									)
+								})
+							}
+							</div> :
+							<div className="null-container">
+								<img className="no-posts-image" src="/assets/no-posts.png" alt="" />
+								<p>No posts</p>
+							</div>
 						}
-						</div> :null
-					}
+						</div>
+						}
 					</div>
-					}
+					
 				</div>
-				<div id="profile-settings-container" style={settingsOpen?{display:'block'}:{display:'none'}}></div>
-				<div id="profile-settings" style={settingsOpen?{inset:'60px 1rem'}:{inset:'100vh 1rem 0 1rem'}}>
-					<div id="settings-head">
-						<h3>Settings</h3>
-						<button onClick={()=>setSettingsOpen(false)}><img src="/assets/close.png" className="tiny-icon" alt=""></img></button>
-					</div>
-					<div id="settings-body" onClick={()=>setSettingsOpen(false)}>
-						<button onClick={()=>{dispatch(logout())}}><img src="/assets/logout.png" alt="" className="tiny-icon"></img><span>Logout</span></button>
-					</div>
-				</div>
-			</div>
+			</>
 		)
 	}else {
 		return(

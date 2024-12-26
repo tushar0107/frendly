@@ -1,13 +1,12 @@
 import axios from "axios";
 import { useContext, useEffect, useState } from "react";
 import { apiurl, rooturl } from "../components/assets";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { AppContext } from "../Context";
 
 export const Search = ({position})=>{
 	const {search,setSearch,searchResult, setSearchResult,setIsloading,setUserPosts} = useContext(AppContext);
 	const [category,setCategory] = useState(search.category || 'Accounts');
-	const navigate = useNavigate();
 	
 	const searchHandle = ()=>{
 		setIsloading(true);
@@ -18,6 +17,7 @@ export const Search = ({position})=>{
 		}
 		axios.post(apiurl+'search',form).then((res)=>{
 			if(res.data.data){
+				console.log(res.data.data);
 				setSearchResult(res.data.data);
 			}else{
 				console.log(res.data.message);
@@ -53,10 +53,11 @@ export const Search = ({position})=>{
 							searchResult.posts.map((post,index)=>{
 								return(
 									// this is from search results where only one post is shown in the feed hence I have used==> setUserPosts([post]);
-									<div className="post" key={index} onClick={()=>{setUserPosts([post]);navigate('/profile/'+search.search+'/posts')}}>
-										<img src={rooturl+post.post_content[0]} alt="" />
-										<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
-									</div>
+									<Link to={'/profile/posts/'+search.search+''} className="post" key={index} onClick={()=>{setUserPosts(searchResult.posts)}}>
+											{post.post_content[0].split('.').pop()!=='mp4'?<img src={rooturl+`${post.post_content[0]}`} alt="" ></img>:
+											<video src={rooturl+`${post.post_content[0]}`}></video>}
+											<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
+									</Link>
 								)
 							})
 						}
@@ -66,13 +67,13 @@ export const Search = ({position})=>{
 					(<div className="accounts">
 						{searchResult.accounts.map((account,index)=>{
 							return(
-							<div className="profile" onClick={()=>navigate('/profile/'+account.username)} key={index}>
+							<Link to={'/profile/'+account.username} className="profile" key={index}>
 								<img src="/assets/user.png" className="medium-icon" alt="" />
 								<div className="profile-details">
-									<span>{'Actual Name'}</span><br />
+									<span>{account.first_name+ ' '+account.last_name}</span><br />
 									<span className="username">{account.username}</span>
 								</div>
-							</div>)
+							</Link>)
 						})}
 					</div>)
 
@@ -82,10 +83,10 @@ export const Search = ({position})=>{
 					{
 						searchResult.tags.map((post,index)=>{
 							return(
-								<div className="post" key={index}>
+								<Link className="post" key={index}>
 									<img src={post.post_content[0]} alt="" />
 									<span className="num-posts"><img src="/assets/posts-many.png" className="tiny-img" alt="" /></span>
-								</div>
+								</Link>
 							)
 						})
 					}
