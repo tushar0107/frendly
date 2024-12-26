@@ -55,23 +55,26 @@ const Footer = ()=>{
 
 const ChangePassword = ()=>{
 	const [pass,setPass] = useState('');
-	const [confPass,setConfPass] = useState('');
+	const [newPass,setNewPass] = useState('');
 	const [passShow,setPassShow] = useState(false);
-	const [confPassShow,setConfPassShow] = useState(false);
+	const [newPassShow,setNewPassShow] = useState(false);
 	const {setIsloading} = useContext(AppContext);
 	const user = useSelector(state=>state.user.user);
 
 	const passChange = (action)=>{
-		if(pass && confPass){
+		if(pass && newPass){
 			setIsloading(true);
-			axios.post(apiurl+action,{'username':user.username,'oldPass':pass,'newPass':confPass}).then((res)=>{
+			axios.post(apiurl+action,{'username':user.username,'oldPass':pass,'newPass':newPass}).then((res)=>{
+				setIsloading(false);
 				if(res.data.status){
-					setIsloading(false);
-					alert(res.data.status);
+					alert(res.data.message);
+					setNewPass('');
+					setPass('');
+				}else{
+					alert(res.data.message);
 				}
 			}).catch(e=>{
 				setIsloading(false);
-				console.log()
 			});
 		}
 	}
@@ -86,9 +89,9 @@ const ChangePassword = ()=>{
 					<img src={`/assets/${passShow?'hide.png':'show.png'}`} onClick={()=>setPassShow(!passShow)} className="pass-show-hide" alt="" />
 					</label>
 				<label htmlFor="new-password">
-					<input type={confPassShow?"text":"password"} value={confPass} onChange={(e)=>setConfPass(e.target.value)}></input>
-					<span style={confPass?{top:'0px',left: '.3rem',fontSize: '0.8rem'}:null}>Enter New Password</span>
-					<img src={`/assets/${confPassShow?'hide.png':'show.png'}`} onClick={()=>setConfPassShow(!confPassShow)} className="pass-show-hide" alt="" />
+					<input type={newPassShow?"text":"password"} value={newPass} onChange={(e)=>setNewPass(e.target.value)}></input>
+					<span style={newPass?{top:'0px',left: '.3rem',fontSize: '0.8rem'}:null}>Enter New Password</span>
+					<img src={`/assets/${newPassShow?'hide.png':'show.png'}`} onClick={()=>setNewPassShow(!newPassShow)} className="pass-show-hide" alt="" />
 				</label>
 				<div className="submit">
 					<button type="button" className="submit-btn btn" onClick={()=>{passChange('change-password')}}>Submit</button>|
